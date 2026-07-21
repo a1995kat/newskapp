@@ -1,5 +1,5 @@
 import Parser from "rss-parser";
-import { FEEDS, EU_KEYWORDS } from "../../../lib/feeds";
+import { FEEDS, EU_KEYWORDS, MAX_ITEMS_PER_FEED } from "../../../lib/feeds";
 import { toByteSummary, stripHtml } from "../../../lib/summarize";
 
 export const runtime = "nodejs";
@@ -11,6 +11,14 @@ const parser = new Parser({
   headers: {
     "User-Agent":
       "Mozilla/5.0 (compatible; ByteNewsBot/1.0; +https://example.com) RSS reader"
+  },
+  // Media RSS namespace tags aren't parsed by default — map them explicitly
+  // so we can pull thumbnail images out of feeds that use them (NYT, TOI, etc).
+  customFields: {
+    item: [
+      ["media:content", "mediaContent", { keepArray: true }],
+      ["media:thumbnail", "mediaThumbnail"]
+    ]
   }
 });
 
@@ -36,10 +44,38 @@ function dedupe(items) {
   });
 }
 
+// Different feeds expose images in different ways (standard <enclosure>,
+// Media RSS <media:content>/<media:thumbnail>, or just an <img> embedded in
+// the HTML description). Try each in order until one works.
+function extractImage(item) {
+  if (item.enclosure?.url) return item.enclosure.url;
+
+  const thumb = item.mediaThumbnail;
+  if (thumb?.$?.url) return thumb.$.url;
+  if (typeof thumb === "string" && thumb.startsWith("http")) return thumb;
+
+  const mc = item.mediaContent;
+  if (Array.isArray(mc)) {
+    for (const m of mc) {
+      const url = m?.$?.url || m?.url;
+      if (url) return url;
+    }
+  } else if (mc?.$?.url) {
+    return mc.$.url;
+  }
+
+  const html = item.content || item["content:encoded"] || item.summary || "";
+  const match = /<img[^>]+src="([^"]+)"/i.exec(html);
+  if (match) return match[1];
+
+  return null;
+}
+
 async function fetchFeed(feed) {
   try {
     const parsed = await withTimeout(parser.parseURL(feed.url), 9000);
-    return (parsed.items || []).map((item) => {
+    const items = (parsed.items || []).slice(0, MAX_ITEMS_PER_FEED);
+    return items.map((item) => {
       const title = stripHtml(item.title || "");
       const rawDesc = item.contentSnippet || item.content || item.summary || "";
       return {
@@ -49,12 +85,9 @@ async function fetchFeed(feed) {
         link: item.link,
         source: feed.source,
         region: feed.region,
+        topic: feed.topic || null,
         publishedAt: item.isoDate || item.pubDate || null,
-        image:
-          item.enclosure?.url ||
-          item["media:content"]?.url ||
-          item["media:thumbnail"]?.url ||
-          null
+        image: extractImage(item)
       };
     });
   } catch (err) {
