@@ -1,5 +1,11 @@
 import Parser from "rss-parser";
-import { FEEDS, EU_KEYWORDS, MAX_ITEMS_PER_FEED } from "../../../lib/feeds";
+import {
+  FEEDS,
+  EU_KEYWORDS,
+  MAX_ITEMS_PER_FEED,
+  TOPIC_KEYWORDS,
+  TOPIC_PRIORITY
+} from "../../../lib/feeds";
 import { toByteSummary, stripHtml } from "../../../lib/summarize";
 
 export const runtime = "nodejs";
@@ -35,6 +41,18 @@ function withTimeout(promise, ms) {
 function isEuropeRelated(item) {
   const text = `${item.title} ${item.summary}`.toLowerCase();
   return EU_KEYWORDS.some((kw) => text.includes(kw));
+}
+
+// Classifies a story into a topic by scanning its title+summary for keywords.
+// Only used as a fallback for general feeds that have no explicit feed.topic
+// — dedicated topic feeds (e.g. nyt-business) keep their authoritative tag
+// and never get overridden by a guess.
+function classifyTopic(title, summary) {
+  const text = `${title} ${summary}`.toLowerCase();
+  for (const topic of TOPIC_PRIORITY) {
+    if (TOPIC_KEYWORDS[topic].some((kw) => text.includes(kw))) return topic;
+  }
+  return null;
 }
 
 function dedupe(items) {
@@ -81,14 +99,15 @@ async function fetchFeed(feed) {
     return items.map((item) => {
       const title = stripHtml(item.title || "");
       const rawDesc = item.contentSnippet || item.content || item.summary || "";
+      const summary = toByteSummary(rawDesc, title);
       return {
         id: `${feed.id}-${item.guid || item.link || item.title}`,
         title,
-        summary: toByteSummary(rawDesc, title),
+        summary,
         link: item.link,
         source: feed.source,
         region: feed.region,
-        topic: feed.topic || null,
+        topic: feed.topic || classifyTopic(title, summary),
         publishedAt: item.isoDate || item.pubDate || null,
         image: extractImage(item)
       };

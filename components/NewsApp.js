@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import NewsCard from "./NewsCard";
-import { REGIONS, TOPICS } from "../lib/feeds";
+import { REGIONS, TOPICS, TIME_RANGES } from "../lib/feeds";
 
 const TABS = [...REGIONS, { key: "saved", label: "Saved" }];
 const SAVE_KEY = "byte-news:saved";
@@ -21,6 +21,7 @@ export default function NewsApp() {
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState("top");
   const [topic, setTopic] = useState("all");
+  const [timeRange, setTimeRange] = useState("all");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState([]);
   const [dark, setDark] = useState(false);
@@ -86,12 +87,26 @@ export default function NewsApp() {
   const activeList = useMemo(() => {
     let base = tab === "saved" ? saved : data[tab] || [];
     if (topic !== "all") base = base.filter((i) => i.topic === topic);
+
+    if (timeRange !== "all") {
+      const range = TIME_RANGES.find((r) => r.key === timeRange);
+      const now = Date.now();
+      base = base.filter((i) => {
+        if (!i.publishedAt) return false;
+        const ageHours = (now - new Date(i.publishedAt).getTime()) / 3600000;
+        if (ageHours < 0) return false;
+        if (range.minAgeHours != null && ageHours < range.minAgeHours) return false;
+        if (range.maxAgeHours != null && ageHours > range.maxAgeHours) return false;
+        return true;
+      });
+    }
+
     if (!query.trim()) return base;
     const q = query.toLowerCase();
     return base.filter(
       (i) => i.title.toLowerCase().includes(q) || i.summary.toLowerCase().includes(q)
     );
-  }, [tab, topic, data, saved, query]);
+  }, [tab, topic, timeRange, data, saved, query]);
 
   const liveLabel =
     data.feedsTotal != null ? `${data.feedsOk}/${data.feedsTotal} sources live` : null;
@@ -162,7 +177,7 @@ export default function NewsApp() {
             </button>
           ))}
         </nav>
-        <div className="max-w-3xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+        <div className="max-w-3xl mx-auto px-4 pb-2 flex gap-2 overflow-x-auto">
           {TOPICS.map((t) => (
             <button
               key={t.key}
@@ -171,6 +186,21 @@ export default function NewsApp() {
                 topic === t.key
                   ? "border-brand text-brand"
                   : "border-gray-200 dark:border-neutral-800 text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="max-w-3xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+          {TIME_RANGES.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTimeRange(t.key)}
+              className={`whitespace-nowrap text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                timeRange === t.key
+                  ? "bg-neutral-800 text-white dark:bg-white dark:text-neutral-900"
+                  : "bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-gray-400"
               }`}
             >
               {t.label}
