@@ -9,10 +9,17 @@ const SAVE_KEY = "byte-news:saved";
 const THEME_KEY = "byte-news:theme";
 
 export default function NewsApp() {
-  const [data, setData] = useState({ india: [], eu: [], global: [], feedsOk: null, feedsTotal: null });
+  const [data, setData] = useState({
+    top: [],
+    india: [],
+    eu: [],
+    global: [],
+    feedsOk: null,
+    feedsTotal: null
+  });
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState("global");
+  const [tab, setTab] = useState("top");
   const [topic, setTopic] = useState("all");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState([]);

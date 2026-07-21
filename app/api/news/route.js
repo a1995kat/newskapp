@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const revalidate = 600;
 
 const parser = new Parser({
-  timeout: 8000,
+  timeout: 7000,
   headers: {
     "User-Agent":
       "Mozilla/5.0 (compatible; ByteNewsBot/1.0; +https://example.com) RSS reader"
@@ -22,6 +22,9 @@ const parser = new Parser({
   }
 });
 
+// Kept below Vercel's default serverless function timeout even with ~24
+// feeds fetched in parallel (total wall time ≈ slowest single feed, not the
+// sum, since these all run concurrently via Promise.allSettled below).
 function withTimeout(promise, ms) {
   const timeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error("timeout")), ms)
@@ -73,7 +76,7 @@ function extractImage(item) {
 
 async function fetchFeed(feed) {
   try {
-    const parsed = await withTimeout(parser.parseURL(feed.url), 9000);
+    const parsed = await withTimeout(parser.parseURL(feed.url), 7500);
     const items = (parsed.items || []).slice(0, MAX_ITEMS_PER_FEED);
     return items.map((item) => {
       const title = stripHtml(item.title || "");
@@ -102,6 +105,8 @@ export async function GET() {
 
   const cleanItems = allItems.filter((item) => item.title && item.summary);
 
+  const top = dedupe(cleanItems.filter((i) => i.region === "top"));
+
   const india = dedupe(cleanItems.filter((i) => i.region === "india"));
 
   const eu = dedupe(
@@ -110,7 +115,7 @@ export async function GET() {
     )
   );
 
-  const global = dedupe(cleanItems);
+  const global = dedupe(cleanItems.filter((i) => i.region !== "top"));
 
   const sortByDate = (arr) =>
     [...arr].sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
@@ -121,6 +126,7 @@ export async function GET() {
     generatedAt: new Date().toISOString(),
     feedsOk: fedCount,
     feedsTotal: FEEDS.length,
+    top: sortByDate(top),
     india: sortByDate(india),
     eu: sortByDate(eu),
     global: sortByDate(global)
