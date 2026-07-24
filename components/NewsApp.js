@@ -62,6 +62,10 @@ export default function NewsApp() {
   const [saved, setSaved] = useState([]);
   const [dark, setDark] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null); // null | "category" | "time"
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [isMac, setIsMac] = useState(false);
+  const searchInputRef = useRef(null);
 
   // Load saved bookmarks + theme preference from localStorage on mount.
   useEffect(() => {
@@ -73,9 +77,24 @@ export default function NewsApp() {
         storedTheme === "dark" ||
         (!storedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches);
       setDark(prefersDark);
+      const storedRecent = JSON.parse(localStorage.getItem(RECENT_SEARCH_KEY) || "[]");
+      setRecentSearches(storedRecent);
     } catch {
       // ignore malformed localStorage
     }
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(window.navigator.platform || window.navigator.userAgent));
+  }, []);
+
+  // Cmd/Ctrl+K jumps straight to the search bar from anywhere in the app.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -118,6 +137,48 @@ export default function NewsApp() {
       return next;
     });
   }
+
+  function commitSearch(term) {
+    const trimmed = term.trim();
+    setQuery(trimmed);
+    setSearchOpen(false);
+    if (!trimmed) return;
+    setRecentSearches((prev) => {
+      const next = [
+        trimmed,
+        ...prev.filter((t) => t.toLowerCase() !== trimmed.toLowerCase())
+      ].slice(0, 6);
+      localStorage.setItem(RECENT_SEARCH_KEY, JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function clearRecentSearches() {
+    setRecentSearches([]);
+    localStorage.removeItem(RECENT_SEARCH_KEY);
+  }
+
+  // Real "trending" words pulled from today's actual Top Stories headlines
+  // (not a fabricated list) — the most-repeated significant words across
+  // current top-tab stories, so it reflects what's genuinely being covered.
+  const trendingKeywords = useMemo(() => {
+    const counts = {};
+    (data.top || []).forEach((item) => {
+      (item.title || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .split(/\s+/)
+        .forEach((word) => {
+          if (word.length < 4 || STOPWORDS.has(word)) return;
+          counts[word] = (counts[word] || 0) + 1;
+        });
+    });
+    return Object.entries(counts)
+      .filter(([, count]) => count > 1)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([word]) => word[0].toUpperCase() + word.slice(1));
+  }, [data.top]);
 
   const savedIds = useMemo(() => new Set(saved.map((s) => s.id)), [saved]);
 
@@ -206,12 +267,85 @@ export default function NewsApp() {
               className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
+              ref={searchInputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && query.trim()) {
+                  commitSearch(query);
+                  searchInputRef.current?.blur();
+                } else if (e.key === "Escape") {
+                  setSearchOpen(false);
+                  searchInputRef.current?.blur();
+                }
+              }}
               placeholder="Search stories…"
-              className="w-full rounded-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full rounded-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 pl-9 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
+            <kbd className="hidden sm:flex items-center gap-0.5 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 border border-gray-300 dark:border-neutral-700 rounded px-1.5 py-0.5 pointer-events-none">
+              {isMac ? "⌘K" : "Ctrl K"}
+            </kbd>
+
+            {searchOpen && !query.trim() && (recentSearches.length > 0 || trendingKeywords.length > 0) && (
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setSearchOpen(false)} />
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg py-2 max-h-80 overflow-y-auto">
+                  {recentSearches.length > 0 && (
+                    <div className="px-3 pb-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                          Recent
+                        </span>
+                        <button
+                          onClick={clearRecentSearches}
+                          className="text-[11px] text-gray-400 hover:text-brand"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      <div className="flex flex-col">
+                        {recentSearches.map((term) => (
+                          <button
+                            key={term}
+                            onClick={() => commitSearch(term)}
+                            className="flex items-center gap-2 text-left text-sm px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                          >
+                            <Clock size={13} strokeWidth={2} className="text-gray-400 shrink-0" />
+                            {term}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {trendingKeywords.length > 0 && (
+                    <div
+                      className={`px-3 pt-1 ${
+                        recentSearches.length > 0 ? "border-t border-gray-100 dark:border-neutral-800" : ""
+                      }`}
+                    >
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5 block pt-1">
+                        Trending now
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 pb-1">
+                        {trendingKeywords.map((word) => (
+                          <button
+                            key={word}
+                            onClick={() => commitSearch(word)}
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white transition-colors"
+                          >
+                            <TrendingUp size={12} strokeWidth={2} />
+                            {word}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -311,7 +445,7 @@ export default function NewsApp() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-4 pb-24 sm:pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-start">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-6 items-start">
         {status === "loading" && (
           <p className="col-span-full text-center text-sm text-gray-500 py-10">
             Fetching the latest bytes…

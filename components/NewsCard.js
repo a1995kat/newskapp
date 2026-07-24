@@ -85,7 +85,7 @@ export default function NewsCard({ item, saved, onToggleSave }) {
         </div>
 
         <div className="p-4 pb-2">
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
             <span
               className={`text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
                 REGION_STYLES[item.region] || REGION_STYLES.global
@@ -102,17 +102,17 @@ export default function NewsCard({ item, saved, onToggleSave }) {
                 {item.topic}
               </span>
             )}
-            <span className="text-xs text-gray-500 dark:text-gray-400">{item.source}</span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              · {timeAgo(item.publishedAt)}
-            </span>
           </div>
+
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2">
+            {item.source} · {timeAgo(item.publishedAt)}
+          </p>
 
           <h3 className="font-bold text-base leading-snug group-hover:text-brand transition-colors">
             {item.title}
           </h3>
           {item.summary && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-3">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 line-clamp-3">
               {item.summary}
             </p>
           )}
