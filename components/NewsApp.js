@@ -218,43 +218,51 @@ export default function NewsApp() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-20 bg-paper/90 dark:bg-neutral-950/90 backdrop-blur border-b border-paper-border dark:border-neutral-800">
+      <header className="sticky top-0 z-20 bg-prophet-parchment/95 dark:bg-prophet-night/95 backdrop-blur border-b border-prophet-border dark:border-prophet-night-border">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <svg width="30" height="30" viewBox="0 0 64 64" className="shrink-0" aria-hidden="true">
-              <defs>
-                <clipPath id="logoClip">
-                  <rect width="64" height="64" rx="14" />
-                </clipPath>
-              </defs>
-              <g clipPath="url(#logoClip)">
-                <rect width="64" height="64" fill="#e03a3a" />
-                <polygon points="64,0 64,64 0,64" fill="#232326" />
-              </g>
-              <rect x="24" y="10" width="16" height="26" rx="8" fill="#ffffff" />
-              <path
-                d="M18 28v4c0 7.7 6.3 14 14 14s14-6.3 14-14v-4"
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth="4.5"
-                strokeLinecap="round"
-              />
-              <line x1="32" y1="46" x2="32" y2="53" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
-              <line x1="22" y1="53" x2="42" y2="53" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
-            </svg>
-            <h1 className="font-extrabold text-xl tracking-tight">
-              Byte<span className="text-brand">News</span>
-            </h1>
+          <div className="flex items-center gap-2.5">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 -z-10 rounded-full bg-prophet-gold/30 dark:bg-prophet-gold-bright/25 blur-md animate-glow" />
+              <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+                <defs>
+                  <clipPath id="logoClip">
+                    <rect width="64" height="64" rx="14" />
+                  </clipPath>
+                </defs>
+                <g clipPath="url(#logoClip)">
+                  <rect width="64" height="64" fill="#5c1a1b" />
+                  <polygon points="64,0 64,64 0,64" fill="#2c221e" />
+                </g>
+                <rect x="24" y="10" width="16" height="26" rx="8" fill="#f4ecd8" />
+                <path
+                  d="M18 28v4c0 7.7 6.3 14 14 14s14-6.3 14-14v-4"
+                  fill="none"
+                  stroke="#f4ecd8"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                />
+                <line x1="32" y1="46" x2="32" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
+                <line x1="22" y1="53" x2="42" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="leading-tight">
+              <h1 className="font-display shimmer-text animate-shimmer text-2xl sm:text-[28px] tracking-wide">
+                ByteNews
+              </h1>
+              <p className="hidden sm:block font-headline italic text-[11px] text-prophet-muted dark:text-prophet-night-muted -mt-1">
+                Headlines, delivered by owl or by byte
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {liveLabel && (
               <span
-                className="hidden sm:inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400"
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-press text-prophet-muted dark:text-prophet-night-muted"
                 title="RSS sources responding successfully"
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    data.feedsOk === data.feedsTotal ? "bg-emerald-500" : "bg-amber-500"
+                    data.feedsOk === data.feedsTotal ? "bg-emerald-600" : "bg-prophet-gold-bright"
                   }`}
                 />
                 {liveLabel}
@@ -263,7 +271,11 @@ export default function NewsApp() {
             <button
               onClick={() => load({ silent: true })}
               disabled={refreshing}
-              className="p-2 rounded-full border border-paper-strong dark:border-neutral-700 disabled:opacity-50 text-gray-600 dark:text-gray-300"
+              className={`p-2 rounded-full border border-prophet-border dark:border-prophet-night-border disabled:opacity-50 transition-colors ${
+                refreshing
+                  ? "text-prophet-gold-bright"
+                  : "text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright"
+              }`}
               aria-label="Refresh"
               title="Refresh now"
             >
@@ -271,7 +283,7 @@ export default function NewsApp() {
             </button>
             <button
               onClick={() => setDark((d) => !d)}
-              className="p-2 rounded-full border border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+              className="p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
               aria-label="Toggle dark mode"
             >
               {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
@@ -284,7 +296,7 @@ export default function NewsApp() {
             <Search
               size={16}
               strokeWidth={2}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-prophet-muted dark:text-prophet-night-muted"
             />
             <input
               ref={searchInputRef}
@@ -302,25 +314,25 @@ export default function NewsApp() {
                 }
               }}
               placeholder="Search stories…"
-              className="w-full rounded-full border border-paper-strong dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 pl-9 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full rounded-full border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card text-prophet-ink dark:text-prophet-night-ink font-parchment pl-9 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-prophet-oxblood dark:focus:ring-prophet-gold-bright"
             />
-            <kbd className="hidden sm:flex items-center gap-0.5 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 border border-paper-strong dark:border-neutral-700 rounded px-1.5 py-0.5 pointer-events-none">
+            <kbd className="hidden sm:flex items-center gap-0.5 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-press font-medium text-prophet-muted dark:text-prophet-night-muted border border-prophet-border dark:border-prophet-night-border rounded px-1.5 py-0.5 pointer-events-none">
               {isMac ? "⌘K" : "Ctrl K"}
             </kbd>
 
             {searchOpen && !query.trim() && (recentSearches.length > 0 || trendingKeywords.length > 0) && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setSearchOpen(false)} />
-                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-2 max-h-80 overflow-y-auto">
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-lg border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card shadow-lg py-2 max-h-80 overflow-y-auto">
                   {recentSearches.length > 0 && (
                     <div className="px-3 pb-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                        <span className="text-[11px] font-press font-semibold uppercase tracking-wide text-prophet-muted dark:text-prophet-night-muted">
                           Recent
                         </span>
                         <button
                           onClick={clearRecentSearches}
-                          className="text-[11px] text-gray-400 hover:text-brand"
+                          className="text-[11px] text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright"
                         >
                           Clear
                         </button>
@@ -330,9 +342,9 @@ export default function NewsApp() {
                           <button
                             key={term}
                             onClick={() => commitSearch(term)}
-                            className="flex items-center gap-2 text-left text-sm px-2 py-1.5 rounded-md hover:bg-paper dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                            className="flex items-center gap-2 text-left text-sm font-parchment px-2 py-1.5 rounded-md hover:bg-prophet-parchment dark:hover:bg-prophet-night text-prophet-ink dark:text-prophet-night-ink"
                           >
-                            <Clock size={13} strokeWidth={2} className="text-gray-400 shrink-0" />
+                            <Clock size={13} strokeWidth={2} className="text-prophet-muted dark:text-prophet-night-muted shrink-0" />
                             {term}
                           </button>
                         ))}
@@ -343,10 +355,12 @@ export default function NewsApp() {
                   {trendingKeywords.length > 0 && (
                     <div
                       className={`px-3 pt-1 ${
-                        recentSearches.length > 0 ? "border-t border-paper-border dark:border-neutral-800" : ""
+                        recentSearches.length > 0
+                          ? "border-t border-prophet-border dark:border-prophet-night-border"
+                          : ""
                       }`}
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5 block pt-1">
+                      <span className="text-[11px] font-press font-semibold uppercase tracking-wide text-prophet-muted dark:text-prophet-night-muted mb-1.5 block pt-1">
                         Trending now
                       </span>
                       <div className="flex flex-wrap gap-1.5 pb-1">
@@ -354,7 +368,7 @@ export default function NewsApp() {
                           <button
                             key={word}
                             onClick={() => commitSearch(word)}
-                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-paper dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white transition-colors"
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-prophet-parchment dark:bg-prophet-night text-prophet-muted dark:text-prophet-night-muted hover:bg-prophet-oxblood hover:text-prophet-card dark:hover:bg-prophet-gold-bright dark:hover:text-prophet-night transition-colors"
                           >
                             <TrendingUp size={12} strokeWidth={2} />
                             {word}
@@ -378,10 +392,10 @@ export default function NewsApp() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+                className={`flex items-center gap-1.5 whitespace-nowrap font-headline font-semibold text-sm px-4 py-1.5 rounded-full transition-colors ${
                   active
-                    ? "bg-brand text-white"
-                    : "bg-paper-card dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                    ? "bg-prophet-oxblood text-prophet-card dark:bg-prophet-gold-bright dark:text-prophet-night"
+                    : "bg-prophet-card dark:bg-prophet-night-card text-prophet-muted dark:text-prophet-night-muted"
                 }`}
               >
                 <Icon size={15} strokeWidth={2} fill={active ? "currentColor" : "none"} />
@@ -398,8 +412,8 @@ export default function NewsApp() {
               onClick={() => toggleDropdown("category")}
               className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 topic !== "all"
-                  ? "border-brand text-brand"
-                  : "border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+                  ? "border-prophet-oxblood text-prophet-oxblood dark:border-prophet-gold-bright dark:text-prophet-gold-bright"
+                  : "border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted"
               }`}
             >
               Category: {activeTopicLabel}
@@ -408,7 +422,7 @@ export default function NewsApp() {
             {openDropdown === "category" && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
-                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-1">
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card shadow-lg py-1">
                   {TOPICS.map((t) => (
                     <button
                       key={t.key}
@@ -416,8 +430,10 @@ export default function NewsApp() {
                         setTopic(t.key);
                         setOpenDropdown(null);
                       }}
-                      className={`w-full text-left text-sm px-3 py-2 hover:bg-paper dark:hover:bg-neutral-800 ${
-                        topic === t.key ? "font-semibold text-brand" : "text-gray-700 dark:text-gray-300"
+                      className={`w-full text-left text-sm px-3 py-2 hover:bg-prophet-parchment dark:hover:bg-prophet-night ${
+                        topic === t.key
+                          ? "font-semibold text-prophet-oxblood dark:text-prophet-gold-bright"
+                          : "text-prophet-ink dark:text-prophet-night-ink"
                       }`}
                     >
                       {t.label}
@@ -433,8 +449,8 @@ export default function NewsApp() {
               onClick={() => toggleDropdown("time")}
               className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 timeRange !== "all"
-                  ? "border-brand text-brand"
-                  : "border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+                  ? "border-prophet-oxblood text-prophet-oxblood dark:border-prophet-gold-bright dark:text-prophet-gold-bright"
+                  : "border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted"
               }`}
             >
               Time: {activeTimeLabel}
@@ -443,7 +459,7 @@ export default function NewsApp() {
             {openDropdown === "time" && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
-                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-1">
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card shadow-lg py-1">
                   {TIME_RANGES.map((t) => (
                     <button
                       key={t.key}
@@ -451,8 +467,10 @@ export default function NewsApp() {
                         setTimeRange(t.key);
                         setOpenDropdown(null);
                       }}
-                      className={`w-full text-left text-sm px-3 py-2 hover:bg-paper dark:hover:bg-neutral-800 ${
-                        timeRange === t.key ? "font-semibold text-brand" : "text-gray-700 dark:text-gray-300"
+                      className={`w-full text-left text-sm px-3 py-2 hover:bg-prophet-parchment dark:hover:bg-prophet-night ${
+                        timeRange === t.key
+                          ? "font-semibold text-prophet-oxblood dark:text-prophet-gold-bright"
+                          : "text-prophet-ink dark:text-prophet-night-ink"
                       }`}
                     >
                       {t.label}
@@ -467,19 +485,19 @@ export default function NewsApp() {
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-6 items-start">
         {status === "loading" && (
-          <p className="col-span-full text-center text-sm text-gray-500 py-10">
-            Fetching the latest bytes…
+          <p className="col-span-full text-center text-sm font-headline italic text-prophet-muted dark:text-prophet-night-muted py-10">
+            Summoning the latest headlines…
           </p>
         )}
 
         {status === "error" && (
-          <p className="col-span-full text-center text-sm text-red-500 py-10">
-            Couldn't load news right now. Check your connection and refresh.
+          <p className="col-span-full text-center text-sm text-prophet-oxblood dark:text-prophet-gold-bright py-10">
+            The ink well ran dry — check your connection and refresh.
           </p>
         )}
 
         {status === "ready" && activeList.length === 0 && (
-          <p className="col-span-full flex items-center justify-center gap-1.5 text-center text-sm text-gray-500 py-10">
+          <p className="col-span-full flex items-center justify-center gap-1.5 text-center text-sm text-prophet-muted dark:text-prophet-night-muted py-10">
             {tab === "saved" ? (
               <>
                 No saved stories yet — tap <Bookmark size={14} strokeWidth={2} className="inline" /> on
@@ -501,14 +519,14 @@ export default function NewsApp() {
         ))}
       </main>
 
-      <footer className="hidden sm:block max-w-6xl w-full mx-auto px-4 py-6 text-xs text-gray-400 dark:text-gray-600">
-        Headlines &amp; short summaries only, sourced from public RSS feeds (Hindustan Times,
+      <footer className="hidden sm:block max-w-6xl w-full mx-auto px-4 py-6 text-xs font-press text-prophet-muted dark:text-prophet-night-muted">
+        Headlines &amp; short summaries only, printed fresh from public RSS feeds (Hindustan Times,
         Times of India, Financial Times, The New York Times, Deutsche Welle). Tap any story to
         read the full article on the publisher's site.
       </footer>
 
       {/* Bottom nav — mobile only. Desktop uses the horizontal tabs in the header instead. */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-paper-card/95 dark:bg-neutral-950/95 backdrop-blur border-t border-paper-border dark:border-neutral-800 flex">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-prophet-card/95 dark:bg-prophet-night-card/95 backdrop-blur border-t border-prophet-border dark:border-prophet-night-border flex">
         {TABS.map((t) => {
           const Icon = TAB_ICON_COMPONENTS[t.key];
           const active = tab === t.key;
@@ -516,8 +534,10 @@ export default function NewsApp() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-                active ? "text-brand" : "text-gray-500 dark:text-gray-400"
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-headline font-medium transition-colors ${
+                active
+                  ? "text-prophet-oxblood dark:text-prophet-gold-bright"
+                  : "text-prophet-muted dark:text-prophet-night-muted"
               }`}
             >
               <Icon size={21} strokeWidth={2} fill={active ? "currentColor" : "none"} />

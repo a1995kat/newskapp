@@ -63,7 +63,7 @@ export default function NewsCard({ item, saved, onToggleSave }) {
   const showImage = item.image && !imgFailed;
 
   return (
-    <article className="rounded-xl border border-paper-border dark:border-neutral-800 bg-paper-card dark:bg-neutral-900 overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <article className="animate-ink-in rounded-xl border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card overflow-hidden flex flex-col transition-shadow hover:shadow-[0_6px_20px_rgba(92,26,27,0.18)] dark:hover:shadow-[0_6px_20px_rgba(201,162,39,0.15)]">
       <a href={item.link} target="_blank" rel="noopener noreferrer" className="group">
         <div className="w-full aspect-[16/9] relative overflow-hidden">
           {showImage ? (
@@ -72,11 +72,11 @@ export default function NewsCard({ item, saved, onToggleSave }) {
               alt=""
               loading="lazy"
               onError={() => setImgFailed(true)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover grayscale-[15%] sepia-[10%] group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div
-              className="w-full h-full flex items-center justify-center text-white/90 font-bold text-lg tracking-wide"
+              className="w-full h-full flex items-center justify-center text-white/90 font-headline font-bold text-lg tracking-wide"
               style={{ background: placeholderGradient(item.source) }}
             >
               {item.source}
@@ -104,15 +104,15 @@ export default function NewsCard({ item, saved, onToggleSave }) {
             )}
           </div>
 
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2">
+          <p className="text-[11px] font-press text-prophet-muted dark:text-prophet-night-muted mb-2">
             {item.source} · {timeAgo(item.publishedAt)}
           </p>
 
-          <h3 className="font-bold text-base leading-snug group-hover:text-brand transition-colors">
+          <h3 className="font-headline font-bold text-base leading-snug text-prophet-ink dark:text-prophet-night-ink group-hover:text-prophet-oxblood dark:group-hover:text-prophet-gold-bright transition-colors">
             {item.title}
           </h3>
           {item.summary && (
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1.5 line-clamp-3">
+            <p className="font-parchment text-sm text-prophet-muted dark:text-prophet-night-muted mt-1.5 line-clamp-3">
               {item.summary}
             </p>
           )}
@@ -124,7 +124,7 @@ export default function NewsCard({ item, saved, onToggleSave }) {
           href={item.link}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-semibold text-brand hover:underline"
+          className="font-headline italic text-xs font-semibold text-prophet-oxblood dark:text-prophet-gold-bright hover:underline"
         >
           Read full story on {item.source} →
         </a>
@@ -133,7 +133,7 @@ export default function NewsCard({ item, saved, onToggleSave }) {
           <button
             onClick={handleShare}
             aria-label="Share story"
-            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-brand transition-colors"
+            className="active:animate-sparkle flex items-center gap-1 text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
             title="Share"
           >
             {shareState === "copied" ? (
@@ -148,8 +148,10 @@ export default function NewsCard({ item, saved, onToggleSave }) {
           <button
             onClick={() => onToggleSave(item)}
             aria-label={saved ? "Remove bookmark" : "Save story"}
-            className={`transition-colors ${
-              saved ? "text-brand" : "text-gray-500 dark:text-gray-400 hover:text-brand"
+            className={`active:animate-sparkle transition-colors ${
+              saved
+                ? "text-prophet-oxblood dark:text-prophet-gold-bright"
+                : "text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright"
             }`}
             title={saved ? "Saved" : "Save for later"}
           >

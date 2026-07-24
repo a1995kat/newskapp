@@ -23,3 +23,38 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Subtle aged-parchment paper grain — light mode uses an oxblood/brass
+   fleck, dark mode ("midnight edition") uses a faint brass fleck on
+   charcoal-brown so the texture reads under low light too. */
+.parchment-texture {
+  background-image:
+    radial-gradient(rgba(92, 26, 27, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(176, 141, 87, 0.07) 1px, transparent 1px);
+  background-size: 26px 26px, 34px 34px;
+  background-position: 0 0, 13px 17px;
+}
+
+.dark .parchment-texture {
+  background-image:
+    radial-gradient(rgba(201, 162, 39, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(233, 221, 199, 0.04) 1px, transparent 1px);
+  background-size: 26px 26px, 34px 34px;
+  background-position: 0 0, 13px 17px;
+}
+
+/* Shimmering brass masthead treatment. */
+.shimmer-text {
+  background-image: linear-gradient(
+    90deg,
+    #b08d57 0%,
+    #f1d999 25%,
+    #b08d57 50%,
+    #f1d999 75%,
+    #b08d57 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
