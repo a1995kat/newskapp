@@ -1,21 +1,47 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import {
+  Flame,
+  MapPin,
+  Landmark,
+  Globe2,
+  Bookmark,
+  RefreshCw,
+  Sun,
+  Moon,
+  ChevronDown,
+  Search,
+  Clock,
+  TrendingUp
+} from "lucide-react";
 import NewsCard from "./NewsCard";
 import { REGIONS, TOPICS, TIME_RANGES } from "../lib/feeds";
 
 const TABS = [...REGIONS, { key: "saved", label: "Saved" }];
 const SAVE_KEY = "byte-news:saved";
 const THEME_KEY = "byte-news:theme";
+const RECENT_SEARCH_KEY = "byte-news:recent-searches";
 
-// Icons for the mobile bottom nav (kept as emoji so no icon library/dependency
-// is needed — consistent with the rest of the app's existing emoji controls).
-const TAB_ICONS = {
-  top: "🔥",
-  india: "🇮🇳",
-  eu: "🇪🇺",
-  global: "🌐",
-  saved: "⭐"
+// Common low-signal words to skip when deriving "trending" keywords from
+// today's actual headlines (see trendingKeywords below).
+const STOPWORDS = new Set([
+  "the", "a", "an", "to", "of", "in", "on", "for", "and", "is", "are", "with",
+  "as", "at", "by", "from", "after", "over", "amid", "its", "his", "her",
+  "this", "that", "new", "says", "how", "why", "what", "into", "your", "who",
+  "will", "has", "have", "been", "was", "were", "than", "more", "not"
+]);
+
+// Single, consistent icon set (lucide) used everywhere — mobile bottom nav,
+// desktop tabs, and controls — instead of mixed emoji. Each is a plain
+// outline glyph that fills solid (via the `fill` prop) when its tab/state is
+// active, matching the filled/outline pairing used in iOS-style tab bars.
+const TAB_ICON_COMPONENTS = {
+  top: Flame,
+  india: MapPin,
+  eu: Landmark,
+  global: Globe2,
+  saved: Bookmark
 };
 
 export default function NewsApp() {
@@ -132,7 +158,7 @@ export default function NewsApp() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-20 bg-white/90 dark:bg-neutral-950/90 backdrop-blur border-b border-gray-200 dark:border-neutral-800">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="text-brand text-2xl leading-none">●</span>
             <h1 className="font-extrabold text-xl tracking-tight">
@@ -156,51 +182,63 @@ export default function NewsApp() {
             <button
               onClick={() => load({ silent: true })}
               disabled={refreshing}
-              className="text-sm px-3 py-1.5 rounded-full border border-gray-300 dark:border-neutral-700 disabled:opacity-50"
+              className="p-2 rounded-full border border-gray-300 dark:border-neutral-700 disabled:opacity-50 text-gray-600 dark:text-gray-300"
               aria-label="Refresh"
               title="Refresh now"
             >
-              {refreshing ? "⏳" : "🔄"}
+              <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
             </button>
             <button
               onClick={() => setDark((d) => !d)}
-              className="text-sm px-3 py-1.5 rounded-full border border-gray-300 dark:border-neutral-700"
+              className="p-2 rounded-full border border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-gray-300"
               aria-label="Toggle dark mode"
             >
-              {dark ? "☀️" : "🌙"}
+              {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
             </button>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pb-3">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search stories…"
-            className="w-full rounded-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
+        <div className="max-w-6xl mx-auto px-4 pb-3">
+          <div className="relative">
+            <Search
+              size={16}
+              strokeWidth={2}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search stories…"
+              className="w-full rounded-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
         </div>
 
         {/* Region tabs — desktop/tablet only. Mobile uses the bottom nav instead. */}
-        <nav className="hidden sm:flex max-w-3xl mx-auto px-4 pb-3 gap-2 overflow-x-auto">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`whitespace-nowrap text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
-                tab === t.key
-                  ? "bg-brand text-white"
-                  : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <nav className="hidden sm:flex max-w-6xl mx-auto px-4 pb-3 gap-2 overflow-x-auto">
+          {TABS.map((t) => {
+            const Icon = TAB_ICON_COMPONENTS[t.key];
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
+                  active
+                    ? "bg-brand text-white"
+                    : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                <Icon size={15} strokeWidth={2} fill={active ? "currentColor" : "none"} />
+                {t.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Grouped filter dropdowns — Category and Time — used on both mobile and desktop. */}
-        <div className="max-w-3xl mx-auto px-4 pb-3 flex gap-2">
+        <div className="max-w-6xl mx-auto px-4 pb-3 flex gap-2">
           <div className="relative">
             <button
               onClick={() => toggleDropdown("category")}
@@ -211,7 +249,7 @@ export default function NewsApp() {
               }`}
             >
               Category: {activeTopicLabel}
-              <span className="text-[10px]">▾</span>
+              <ChevronDown size={12} strokeWidth={2.5} />
             </button>
             {openDropdown === "category" && (
               <>
@@ -246,7 +284,7 @@ export default function NewsApp() {
               }`}
             >
               Time: {activeTimeLabel}
-              <span className="text-[10px]">▾</span>
+              <ChevronDown size={12} strokeWidth={2.5} />
             </button>
             {openDropdown === "time" && (
               <>
@@ -273,7 +311,7 @@ export default function NewsApp() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-4 pb-24 sm:pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-4 pb-24 sm:pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 items-start">
         {status === "loading" && (
           <p className="col-span-full text-center text-sm text-gray-500 py-10">
             Fetching the latest bytes…
@@ -287,8 +325,15 @@ export default function NewsApp() {
         )}
 
         {status === "ready" && activeList.length === 0 && (
-          <p className="col-span-full text-center text-sm text-gray-500 py-10">
-            {tab === "saved" ? "No saved stories yet — tap ☆ on any card." : "No stories match these filters."}
+          <p className="col-span-full flex items-center justify-center gap-1.5 text-center text-sm text-gray-500 py-10">
+            {tab === "saved" ? (
+              <>
+                No saved stories yet — tap <Bookmark size={14} strokeWidth={2} className="inline" /> on
+                any card.
+              </>
+            ) : (
+              "No stories match these filters."
+            )}
           </p>
         )}
 
@@ -302,7 +347,7 @@ export default function NewsApp() {
         ))}
       </main>
 
-      <footer className="hidden sm:block max-w-3xl w-full mx-auto px-4 py-6 text-xs text-gray-400 dark:text-gray-600">
+      <footer className="hidden sm:block max-w-6xl w-full mx-auto px-4 py-6 text-xs text-gray-400 dark:text-gray-600">
         Headlines &amp; short summaries only, sourced from public RSS feeds (Hindustan Times,
         Times of India, Financial Times, The New York Times, Deutsche Welle). Tap any story to
         read the full article on the publisher's site.
@@ -310,18 +355,22 @@ export default function NewsApp() {
 
       {/* Bottom nav — mobile only. Desktop uses the horizontal tabs in the header instead. */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 dark:bg-neutral-950/95 backdrop-blur border-t border-gray-200 dark:border-neutral-800 flex">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-              tab === t.key ? "text-brand" : "text-gray-500 dark:text-gray-400"
-            }`}
-          >
-            <span className="text-lg leading-none">{TAB_ICONS[t.key]}</span>
-            {t.label}
-          </button>
-        ))}
+        {TABS.map((t) => {
+          const Icon = TAB_ICON_COMPONENTS[t.key];
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
+                active ? "text-brand" : "text-gray-500 dark:text-gray-400"
+              }`}
+            >
+              <Icon size={21} strokeWidth={2} fill={active ? "currentColor" : "none"} />
+              {t.label}
+            </button>
+          );
+        })}
       </nav>
     </div>
   );

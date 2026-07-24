@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Bookmark, Share2, Check } from "lucide-react";
 
 function timeAgo(dateStr) {
   if (!dateStr) return "";
@@ -128,22 +129,31 @@ export default function NewsCard({ item, saved, onToggleSave }) {
           Read full story on {item.source} →
         </a>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3.5 shrink-0">
           <button
             onClick={handleShare}
             aria-label="Share story"
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-brand transition-colors"
+            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-brand transition-colors"
             title="Share"
           >
-            {shareState === "copied" ? "Copied!" : "⤴ Share"}
+            {shareState === "copied" ? (
+              <>
+                <Check size={17} strokeWidth={2} />
+                <span className="text-xs font-medium">Copied</span>
+              </>
+            ) : (
+              <Share2 size={17} strokeWidth={2} />
+            )}
           </button>
           <button
             onClick={() => onToggleSave(item)}
             aria-label={saved ? "Remove bookmark" : "Save story"}
-            className="text-lg leading-none"
+            className={`transition-colors ${
+              saved ? "text-brand" : "text-gray-500 dark:text-gray-400 hover:text-brand"
+            }`}
             title={saved ? "Saved" : "Save for later"}
           >
-            {saved ? "★" : "☆"}
+            <Bookmark size={18} strokeWidth={2} fill={saved ? "currentColor" : "none"} />
           </button>
         </div>
       </div>
