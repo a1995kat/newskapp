@@ -218,10 +218,30 @@ export default function NewsApp() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="sticky top-0 z-20 bg-white/90 dark:bg-neutral-950/90 backdrop-blur border-b border-gray-200 dark:border-neutral-800">
+      <header className="sticky top-0 z-20 bg-paper/90 dark:bg-neutral-950/90 backdrop-blur border-b border-paper-border dark:border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-brand text-2xl leading-none">●</span>
+            <svg width="30" height="30" viewBox="0 0 64 64" className="shrink-0" aria-hidden="true">
+              <defs>
+                <clipPath id="logoClip">
+                  <rect width="64" height="64" rx="14" />
+                </clipPath>
+              </defs>
+              <g clipPath="url(#logoClip)">
+                <rect width="64" height="64" fill="#e03a3a" />
+                <polygon points="64,0 64,64 0,64" fill="#232326" />
+              </g>
+              <rect x="24" y="10" width="16" height="26" rx="8" fill="#ffffff" />
+              <path
+                d="M18 28v4c0 7.7 6.3 14 14 14s14-6.3 14-14v-4"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="4.5"
+                strokeLinecap="round"
+              />
+              <line x1="32" y1="46" x2="32" y2="53" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
+              <line x1="22" y1="53" x2="42" y2="53" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" />
+            </svg>
             <h1 className="font-extrabold text-xl tracking-tight">
               Byte<span className="text-brand">News</span>
             </h1>
@@ -243,7 +263,7 @@ export default function NewsApp() {
             <button
               onClick={() => load({ silent: true })}
               disabled={refreshing}
-              className="p-2 rounded-full border border-gray-300 dark:border-neutral-700 disabled:opacity-50 text-gray-600 dark:text-gray-300"
+              className="p-2 rounded-full border border-paper-strong dark:border-neutral-700 disabled:opacity-50 text-gray-600 dark:text-gray-300"
               aria-label="Refresh"
               title="Refresh now"
             >
@@ -251,7 +271,7 @@ export default function NewsApp() {
             </button>
             <button
               onClick={() => setDark((d) => !d)}
-              className="p-2 rounded-full border border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+              className="p-2 rounded-full border border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
               aria-label="Toggle dark mode"
             >
               {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
@@ -282,16 +302,16 @@ export default function NewsApp() {
                 }
               }}
               placeholder="Search stories…"
-              className="w-full rounded-full border border-gray-300 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900 pl-9 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+              className="w-full rounded-full border border-paper-strong dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 pl-9 pr-14 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
-            <kbd className="hidden sm:flex items-center gap-0.5 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 border border-gray-300 dark:border-neutral-700 rounded px-1.5 py-0.5 pointer-events-none">
+            <kbd className="hidden sm:flex items-center gap-0.5 absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 border border-paper-strong dark:border-neutral-700 rounded px-1.5 py-0.5 pointer-events-none">
               {isMac ? "⌘K" : "Ctrl K"}
             </kbd>
 
             {searchOpen && !query.trim() && (recentSearches.length > 0 || trendingKeywords.length > 0) && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setSearchOpen(false)} />
-                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg py-2 max-h-80 overflow-y-auto">
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-2 max-h-80 overflow-y-auto">
                   {recentSearches.length > 0 && (
                     <div className="px-3 pb-2">
                       <div className="flex items-center justify-between mb-1">
@@ -310,7 +330,7 @@ export default function NewsApp() {
                           <button
                             key={term}
                             onClick={() => commitSearch(term)}
-                            className="flex items-center gap-2 text-left text-sm px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                            className="flex items-center gap-2 text-left text-sm px-2 py-1.5 rounded-md hover:bg-paper dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300"
                           >
                             <Clock size={13} strokeWidth={2} className="text-gray-400 shrink-0" />
                             {term}
@@ -323,7 +343,7 @@ export default function NewsApp() {
                   {trendingKeywords.length > 0 && (
                     <div
                       className={`px-3 pt-1 ${
-                        recentSearches.length > 0 ? "border-t border-gray-100 dark:border-neutral-800" : ""
+                        recentSearches.length > 0 ? "border-t border-paper-border dark:border-neutral-800" : ""
                       }`}
                     >
                       <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5 block pt-1">
@@ -334,7 +354,7 @@ export default function NewsApp() {
                           <button
                             key={word}
                             onClick={() => commitSearch(word)}
-                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white transition-colors"
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-paper dark:bg-neutral-800 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white transition-colors"
                           >
                             <TrendingUp size={12} strokeWidth={2} />
                             {word}
@@ -361,7 +381,7 @@ export default function NewsApp() {
                 className={`flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
                   active
                     ? "bg-brand text-white"
-                    : "bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
+                    : "bg-paper-card dark:bg-neutral-800 text-gray-700 dark:text-gray-300"
                 }`}
               >
                 <Icon size={15} strokeWidth={2} fill={active ? "currentColor" : "none"} />
@@ -379,7 +399,7 @@ export default function NewsApp() {
               className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 topic !== "all"
                   ? "border-brand text-brand"
-                  : "border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+                  : "border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
               }`}
             >
               Category: {activeTopicLabel}
@@ -388,7 +408,7 @@ export default function NewsApp() {
             {openDropdown === "category" && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
-                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg py-1">
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-1">
                   {TOPICS.map((t) => (
                     <button
                       key={t.key}
@@ -396,7 +416,7 @@ export default function NewsApp() {
                         setTopic(t.key);
                         setOpenDropdown(null);
                       }}
-                      className={`w-full text-left text-sm px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-800 ${
+                      className={`w-full text-left text-sm px-3 py-2 hover:bg-paper dark:hover:bg-neutral-800 ${
                         topic === t.key ? "font-semibold text-brand" : "text-gray-700 dark:text-gray-300"
                       }`}
                     >
@@ -414,7 +434,7 @@ export default function NewsApp() {
               className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
                 timeRange !== "all"
                   ? "border-brand text-brand"
-                  : "border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+                  : "border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
               }`}
             >
               Time: {activeTimeLabel}
@@ -423,7 +443,7 @@ export default function NewsApp() {
             {openDropdown === "time" && (
               <>
                 <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
-                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg py-1">
+                <div className="absolute left-0 top-full mt-1 z-30 w-44 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-1">
                   {TIME_RANGES.map((t) => (
                     <button
                       key={t.key}
@@ -431,7 +451,7 @@ export default function NewsApp() {
                         setTimeRange(t.key);
                         setOpenDropdown(null);
                       }}
-                      className={`w-full text-left text-sm px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-800 ${
+                      className={`w-full text-left text-sm px-3 py-2 hover:bg-paper dark:hover:bg-neutral-800 ${
                         timeRange === t.key ? "font-semibold text-brand" : "text-gray-700 dark:text-gray-300"
                       }`}
                     >
@@ -488,7 +508,7 @@ export default function NewsApp() {
       </footer>
 
       {/* Bottom nav — mobile only. Desktop uses the horizontal tabs in the header instead. */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-white/95 dark:bg-neutral-950/95 backdrop-blur border-t border-gray-200 dark:border-neutral-800 flex">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-20 bg-paper-card/95 dark:bg-neutral-950/95 backdrop-blur border-t border-paper-border dark:border-neutral-800 flex">
         {TABS.map((t) => {
           const Icon = TAB_ICON_COMPONENTS[t.key];
           const active = tab === t.key;
