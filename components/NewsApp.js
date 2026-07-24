@@ -16,6 +16,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import NewsCard from "./NewsCard";
+import HeroCard from "./HeroCard";
 import { REGIONS, TOPICS, TIME_RANGES } from "../lib/feeds";
 
 const TABS = [...REGIONS, { key: "saved", label: "Saved" }];
@@ -23,8 +24,8 @@ const SAVE_KEY = "byte-news:saved";
 const THEME_KEY = "byte-news:theme";
 const RECENT_SEARCH_KEY = "byte-news:recent-searches";
 
-// Common low-signal words to skip when deriving "trending" keywords from
-// today's actual headlines (see trendingKeywords below).
+// Common low-signal words to skip when deriving "trending" keywords, and
+// when scoring headline overlap for the lead-story pick below.
 const STOPWORDS = new Set([
   "the", "a", "an", "to", "of", "in", "on", "for", "and", "is", "are", "with",
   "as", "at", "by", "from", "after", "over", "amid", "its", "his", "her",
@@ -43,6 +44,67 @@ const TAB_ICON_COMPONENTS = {
   global: Globe2,
   saved: Bookmark
 };
+
+function significantWords(title) {
+  return (title || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
+}
+
+// Picks the "lead story" for a section with a simple, explainable heuristic
+// — not a black box. A story scores higher the more recent it is, if it has
+// an image (more front-page-worthy than a bare text stub), if the headline
+// is substantial, and — the strongest signal — if OTHER stories in the same
+// list share significant headline words with it (multiple outlets covering
+// the same thing at once is a good proxy for "this is the big story").
+function scoreHeroCandidate(item, pool) {
+  let score = 0;
+  if (item.publishedAt) {
+    const ageHours = (Date.now() - new Date(item.publishedAt).getTime()) / 3600000;
+    score += Math.max(0, 48 - ageHours);
+  }
+  if (item.image) score += 20;
+  if (item.title && item.title.length > 40) score += 5;
+
+  const words = significantWords(item.title);
+  let corroboration = 0;
+  pool.forEach((other) => {
+    if (other.id === item.id) return;
+    const otherWords = significantWords(other.title);
+    if (words.some((w) => otherWords.includes(w))) corroboration++;
+  });
+  score += corroboration * 15;
+
+  return score;
+}
+
+function pickHero(items) {
+  if (!items.length) return null;
+  let best = items[0];
+  let bestScore = -Infinity;
+  items.forEach((item) => {
+    const s = scoreHeroCandidate(item, items);
+    if (s > bestScore) {
+      bestScore = s;
+      best = item;
+    }
+  });
+  return best;
+}
+
+function Flourish({ className }) {
+  return (
+    <svg width="64" height="14" viewBox="0 0 64 14" className={className} aria-hidden="true">
+      <line x1="0" y1="7" x2="22" y2="7" stroke="currentColor" strokeWidth="1" />
+      <circle cx="6" cy="7" r="1.4" fill="currentColor" />
+      <path d="M28 1 L32 7 L28 13 L24 7 Z" fill="currentColor" />
+      <line x1="38" y1="7" x2="64" y2="7" stroke="currentColor" strokeWidth="1" />
+      <circle cx="58" cy="7" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function NewsApp() {
   const [data, setData] = useState({
@@ -65,6 +127,7 @@ export default function NewsApp() {
   const [recentSearches, setRecentSearches] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  const [todayLabel, setTodayLabel] = useState("");
   const searchInputRef = useRef(null);
 
   // Load saved bookmarks + theme preference from localStorage on mount.
@@ -83,6 +146,13 @@ export default function NewsApp() {
       // ignore malformed localStorage
     }
     setIsMac(/Mac|iPhone|iPad|iPod/.test(window.navigator.platform || window.navigator.userAgent));
+    // Computed client-side only (not at initial render) to avoid a
+    // server/client hydration mismatch on the date string.
+    setTodayLabel(
+      new Date()
+        .toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+        .toUpperCase()
+    );
   }, []);
 
   // Cmd/Ctrl+K jumps straight to the search bar from anywhere in the app.
@@ -164,14 +234,9 @@ export default function NewsApp() {
   const trendingKeywords = useMemo(() => {
     const counts = {};
     (data.top || []).forEach((item) => {
-      (item.title || "")
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
-        .split(/\s+/)
-        .forEach((word) => {
-          if (word.length < 4 || STOPWORDS.has(word)) return;
-          counts[word] = (counts[word] || 0) + 1;
-        });
+      significantWords(item.title).forEach((word) => {
+        counts[word] = (counts[word] || 0) + 1;
+      });
     });
     return Object.entries(counts)
       .filter(([, count]) => count > 1)
@@ -206,11 +271,22 @@ export default function NewsApp() {
     );
   }, [tab, topic, timeRange, data, saved, query]);
 
+  // The lead/hero story is pulled out of the flowing broadsheet columns —
+  // every section gets one except Saved (a personal list has no "front page").
+  const { heroItem, restItems } = useMemo(() => {
+    if (tab === "saved" || activeList.length === 0) {
+      return { heroItem: null, restItems: activeList };
+    }
+    const hero = pickHero(activeList);
+    return { heroItem: hero, restItems: activeList.filter((i) => i.id !== hero.id) };
+  }, [activeList, tab]);
+
   const liveLabel =
     data.feedsTotal != null ? `${data.feedsOk}/${data.feedsTotal} sources live` : null;
 
   const activeTopicLabel = TOPICS.find((t) => t.key === topic)?.label || "All";
   const activeTimeLabel = TIME_RANGES.find((t) => t.key === timeRange)?.label || "All time";
+  const activeSectionLabel = TABS.find((t) => t.key === tab)?.label || "";
 
   function toggleDropdown(name) {
     setOpenDropdown((prev) => (prev === name ? null : name));
@@ -219,76 +295,90 @@ export default function NewsApp() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-20 bg-prophet-parchment/95 dark:bg-prophet-night/95 backdrop-blur border-b border-prophet-border dark:border-prophet-night-border">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 -z-10 rounded-full bg-prophet-gold/30 dark:bg-prophet-gold-bright/25 blur-md animate-glow" />
-              <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
-                <defs>
-                  <clipPath id="logoClip">
-                    <rect width="64" height="64" rx="14" />
-                  </clipPath>
-                </defs>
-                <g clipPath="url(#logoClip)">
-                  <rect width="64" height="64" fill="#5c1a1b" />
-                  <polygon points="64,0 64,64 0,64" fill="#2c221e" />
-                </g>
-                <rect x="24" y="10" width="16" height="26" rx="8" fill="#f4ecd8" />
-                <path
-                  d="M18 28v4c0 7.7 6.3 14 14 14s14-6.3 14-14v-4"
-                  fill="none"
-                  stroke="#f4ecd8"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                />
-                <line x1="32" y1="46" x2="32" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
-                <line x1="22" y1="53" x2="42" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="leading-tight">
-              <h1 className="font-display shimmer-text animate-shimmer text-2xl sm:text-[28px] tracking-wide">
-                ByteNews
+        {/* Slim utility bar above the masthead. */}
+        <div className="max-w-6xl mx-auto px-4 pt-2 flex items-center justify-end gap-2">
+          <button
+            onClick={() => load({ silent: true })}
+            disabled={refreshing}
+            className={`p-2 rounded-full border border-prophet-border dark:border-prophet-night-border disabled:opacity-50 transition-colors ${
+              refreshing
+                ? "text-prophet-gold-bright"
+                : "text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright"
+            }`}
+            aria-label="Refresh"
+            title="Refresh now"
+          >
+            <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
+          </button>
+          <button
+            onClick={() => setDark((d) => !d)}
+            className="p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
+          </button>
+        </div>
+
+        {/* Ornate masthead banner. */}
+        <div className="max-w-6xl mx-auto px-4 pt-1 pb-2 text-center">
+          <div className="flex items-center justify-center gap-3 sm:gap-5">
+            <Flourish className="hidden sm:block text-prophet-oxblood dark:text-prophet-gold-bright shrink-0" />
+            <div className="flex items-center gap-2.5">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 -z-10 rounded-full bg-prophet-gold/30 dark:bg-prophet-gold-bright/25 blur-md animate-glow" />
+                <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+                  <defs>
+                    <clipPath id="logoClip">
+                      <rect width="64" height="64" rx="14" />
+                    </clipPath>
+                  </defs>
+                  <g clipPath="url(#logoClip)">
+                    <rect width="64" height="64" fill="#5c1a1b" />
+                    <polygon points="64,0 64,64 0,64" fill="#2c221e" />
+                  </g>
+                  <rect x="24" y="10" width="16" height="26" rx="8" fill="#f4ecd8" />
+                  <path
+                    d="M18 28v4c0 7.7 6.3 14 14 14s14-6.3 14-14v-4"
+                    fill="none"
+                    stroke="#f4ecd8"
+                    strokeWidth="4.5"
+                    strokeLinecap="round"
+                  />
+                  <line x1="32" y1="46" x2="32" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
+                  <line x1="22" y1="53" x2="42" y2="53" stroke="#f4ecd8" strokeWidth="4.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h1 className="font-display shimmer-text animate-shimmer text-3xl sm:text-4xl tracking-wide">
+                The Daily Byte
               </h1>
-              <p className="hidden sm:block font-headline italic text-[11px] text-prophet-muted dark:text-prophet-night-muted -mt-1">
-                Headlines, delivered by owl or by byte
-              </p>
             </div>
+            <Flourish className="hidden sm:block text-prophet-oxblood dark:text-prophet-gold-bright shrink-0 scale-x-[-1]" />
           </div>
-          <div className="flex items-center gap-2">
+
+          <p className="font-headline italic text-xs text-prophet-muted dark:text-prophet-night-muted mt-1">
+            Headlines, delivered by owl or by byte
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-2 text-[11px] font-press uppercase tracking-[0.12em] text-prophet-muted dark:text-prophet-night-muted">
+            {todayLabel && <span>{todayLabel}</span>}
+            {todayLabel && <span aria-hidden="true">•</span>}
+            <span>Price: 5 Sapphires / Free Today</span>
             {liveLabel && (
-              <span
-                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-press text-prophet-muted dark:text-prophet-night-muted"
-                title="RSS sources responding successfully"
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    data.feedsOk === data.feedsTotal ? "bg-emerald-600" : "bg-prophet-gold-bright"
-                  }`}
-                />
-                {liveLabel}
-              </span>
+              <>
+                <span aria-hidden="true">•</span>
+                <span className="inline-flex items-center gap-1">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      data.feedsOk === data.feedsTotal ? "bg-emerald-600" : "bg-prophet-gold-bright"
+                    }`}
+                  />
+                  {liveLabel}
+                </span>
+              </>
             )}
-            <button
-              onClick={() => load({ silent: true })}
-              disabled={refreshing}
-              className={`p-2 rounded-full border border-prophet-border dark:border-prophet-night-border disabled:opacity-50 transition-colors ${
-                refreshing
-                  ? "text-prophet-gold-bright"
-                  : "text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright"
-              }`}
-              aria-label="Refresh"
-              title="Refresh now"
-            >
-              <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
-            </button>
-            <button
-              onClick={() => setDark((d) => !d)}
-              className="p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
-            </button>
           </div>
+
+          <div className="mt-3 border-t-[3px] border-double border-prophet-border dark:border-prophet-night-border" />
         </div>
 
         <div className="max-w-6xl mx-auto px-4 pb-3">
@@ -483,21 +573,21 @@ export default function NewsApp() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-6 items-start">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5">
         {status === "loading" && (
-          <p className="col-span-full text-center text-sm font-headline italic text-prophet-muted dark:text-prophet-night-muted py-10">
+          <p className="text-center text-sm font-headline italic text-prophet-muted dark:text-prophet-night-muted py-10">
             Summoning the latest headlines…
           </p>
         )}
 
         {status === "error" && (
-          <p className="col-span-full text-center text-sm text-prophet-oxblood dark:text-prophet-gold-bright py-10">
+          <p className="text-center text-sm text-prophet-oxblood dark:text-prophet-gold-bright py-10">
             The ink well ran dry — check your connection and refresh.
           </p>
         )}
 
         {status === "ready" && activeList.length === 0 && (
-          <p className="col-span-full flex items-center justify-center gap-1.5 text-center text-sm text-prophet-muted dark:text-prophet-night-muted py-10">
+          <p className="flex items-center justify-center gap-1.5 text-center text-sm text-prophet-muted dark:text-prophet-night-muted py-10">
             {tab === "saved" ? (
               <>
                 No saved stories yet — tap <Bookmark size={14} strokeWidth={2} className="inline" /> on
@@ -509,14 +599,26 @@ export default function NewsApp() {
           </p>
         )}
 
-        {activeList.map((item) => (
-          <NewsCard
-            key={item.id}
-            item={item}
-            saved={savedIds.has(item.id)}
-            onToggleSave={toggleSave}
-          />
-        ))}
+        {status === "ready" && activeList.length > 0 && (
+          <div className="broadsheet-columns columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-x-8">
+            {heroItem && (
+              <HeroCard
+                item={heroItem}
+                saved={savedIds.has(heroItem.id)}
+                onToggleSave={toggleSave}
+                sectionLabel={activeSectionLabel}
+              />
+            )}
+            {restItems.map((item) => (
+              <NewsCard
+                key={item.id}
+                item={item}
+                saved={savedIds.has(item.id)}
+                onToggleSave={toggleSave}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       <footer className="hidden sm:block max-w-6xl w-full mx-auto px-4 py-6 text-xs font-press text-prophet-muted dark:text-prophet-night-muted">

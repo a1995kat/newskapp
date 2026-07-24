@@ -58,3 +58,38 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* Broadsheet multi-column layout — articles flow top-to-bottom within a
+   column, then wrap to the next column, separated by a thin vertical rule,
+   like a physical newspaper page. Column count/gap come from Tailwind's
+   columns-* + gap-x-* utilities on the element; this just supplies the rule
+   (Tailwind has no utility for column-rule). */
+.broadsheet-columns {
+  column-rule: 1px solid #d8c6a0;
+}
+
+.dark .broadsheet-columns {
+  column-rule: 1px solid #4a3f36;
+}
+
+/* Lead story breaks out of the column flow to span the full width, like a
+   broadsheet's banner story across the top of the page. */
+.hero-span {
+  column-span: all;
+}
+
+/* Ornate drop cap on the lead story's opening paragraph, set in the same
+   blackletter face as the masthead. */
+.drop-cap::first-letter {
+  font-family: var(--font-display);
+  font-size: 4.25rem;
+  line-height: 0.72;
+  float: left;
+  padding-right: 0.5rem;
+  padding-top: 0.3rem;
+  color: #5c1a1b;
+}
+
+.dark .drop-cap::first-letter {
+  color: #c9a227;
+}

@@ -63,7 +63,7 @@ export default function NewsCard({ item, saved, onToggleSave }) {
   const showImage = item.image && !imgFailed;
 
   return (
-    <article className="animate-ink-in rounded-xl border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card overflow-hidden flex flex-col transition-shadow hover:shadow-[0_6px_20px_rgba(92,26,27,0.18)] dark:hover:shadow-[0_6px_20px_rgba(201,162,39,0.15)]">
+    <article className="animate-ink-in break-inside-avoid mb-6 rounded-xl border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card overflow-hidden flex flex-col transition-shadow hover:shadow-[0_6px_20px_rgba(92,26,27,0.18)] dark:hover:shadow-[0_6px_20px_rgba(201,162,39,0.15)]">
       <a href={item.link} target="_blank" rel="noopener noreferrer" className="group">
         <div className="w-full aspect-[16/9] relative overflow-hidden">
           {showImage ? (
