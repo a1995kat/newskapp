@@ -8,8 +8,9 @@ import {
   Globe2,
   Bookmark,
   RefreshCw,
-  Sun,
   Moon,
+  Sparkles,
+  Wand2,
   ChevronDown,
   Search,
   Clock,
@@ -106,6 +107,36 @@ function Flourish({ className }) {
   );
 }
 
+// A broomstick silhouette used for the background broom-flight decoration —
+// bristles trail behind the direction of travel, like a Quidditch player
+// zooming past in the distance.
+function BroomIcon() {
+  return (
+    <svg width="48" height="20" viewBox="0 0 48 20" aria-hidden="true">
+      <line x1="4" y1="10" x2="32" y2="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M2 4 L14 10 L2 16 Z" fill="currentColor" opacity="0.75" />
+      <path d="M32 4 L46 10 L32 16 Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Purely decorative, pointer-events-none layer: a couple of broomsticks
+// drift across the viewport on independent, endlessly looping flight paths
+// (see .broom-fly-1 / .broom-fly-2 keyframes in globals.css) — a quiet,
+// ambient nod to the theme rather than anything that competes with reading.
+function BroomTrail() {
+  return (
+    <div className="broom-layer" aria-hidden="true">
+      <div className="broom broom-1">
+        <BroomIcon />
+      </div>
+      <div className="broom broom-2">
+        <BroomIcon />
+      </div>
+    </div>
+  );
+}
+
 export default function NewsApp() {
   const [data, setData] = useState({
     top: [],
@@ -128,7 +159,17 @@ export default function NewsApp() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const [todayLabel, setTodayLabel] = useState("");
+  const [wandBurst, setWandBurst] = useState(false);
   const searchInputRef = useRef(null);
+
+  // A little theatre for the theme switch: flick the wand, let a handful of
+  // sparks fly outward, then clean them up — purely cosmetic, no effect on
+  // the actual theme logic below.
+  function handleThemeToggle() {
+    setDark((d) => !d);
+    setWandBurst(true);
+    setTimeout(() => setWandBurst(false), 650);
+  }
 
   // Load saved bookmarks + theme preference from localStorage on mount.
   useEffect(() => {
@@ -294,6 +335,7 @@ export default function NewsApp() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <BroomTrail />
       <header className="sticky top-0 z-20 bg-prophet-parchment/95 dark:bg-prophet-night/95 backdrop-blur border-b border-prophet-border dark:border-prophet-night-border">
         {/* Slim utility bar above the masthead. */}
         <div className="max-w-6xl mx-auto px-4 pt-2 flex items-center justify-end gap-2">
@@ -311,11 +353,22 @@ export default function NewsApp() {
             <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
           </button>
           <button
-            onClick={() => setDark((d) => !d)}
-            className="p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
+            onClick={handleThemeToggle}
+            className="relative p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
             aria-label="Toggle dark mode"
+            title="Wave the wand"
           >
-            {dark ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
+            {/* Distinct icon per theme rather than a plain sun/moon swap —
+                daylight edition gets a sparkle, midnight edition gets a moon. */}
+            {dark ? <Moon size={16} strokeWidth={2} /> : <Sparkles size={16} strokeWidth={2} />}
+            {wandBurst && (
+              <span className="wand-burst" aria-hidden="true">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <span key={i} className="wand-spark" style={{ "--angle": `${i * 60}deg` }} />
+                ))}
+                <Wand2 size={14} strokeWidth={2} className="wand-flick" />
+              </span>
+            )}
           </button>
         </div>
 
@@ -356,7 +409,7 @@ export default function NewsApp() {
           </div>
 
           <p className="font-headline italic text-xs text-prophet-muted dark:text-prophet-night-muted mt-1">
-            Headlines, delivered by owl or by byte
+            News delivered from your own beloved white owl
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-2 text-[11px] font-press uppercase tracking-[0.12em] text-prophet-muted dark:text-prophet-night-muted">

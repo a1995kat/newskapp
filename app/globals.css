@@ -93,3 +93,139 @@ body {
 .dark .drop-cap::first-letter {
   color: #c9a227;
 }
+
+/* Ambient broom-flight decoration — two broomsticks drift across the whole
+   viewport on independent, endlessly looping diagonal paths. Purely
+   cosmetic (aria-hidden, pointer-events: none) and kept low-opacity/small so
+   it never competes with reading; it's meant to be glimpsed, not stared at. */
+.broom-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  overflow: hidden;
+}
+
+.broom {
+  position: absolute;
+  color: #5c1a1b;
+  opacity: 0;
+}
+
+.dark .broom {
+  color: #c9a227;
+}
+
+.broom-1 {
+  top: 9%;
+  left: -10%;
+  animation: broom-fly-1 22s linear infinite;
+}
+
+.broom-2 {
+  top: 24%;
+  left: -10%;
+  animation: broom-fly-2 28s linear infinite;
+  animation-delay: 9s;
+}
+
+@keyframes broom-fly-1 {
+  0% { transform: translateX(0) translateY(0) rotate(-4deg) scale(0.9); opacity: 0; }
+  6% { opacity: 0.55; }
+  50% { transform: translateX(60vw) translateY(-16px) rotate(3deg) scale(1); }
+  94% { opacity: 0.55; }
+  100% { transform: translateX(125vw) translateY(6px) rotate(-2deg) scale(0.9); opacity: 0; }
+}
+
+@keyframes broom-fly-2 {
+  0% { transform: translateX(0) translateY(0) rotate(4deg) scale(0.72); opacity: 0; }
+  6% { opacity: 0.38; }
+  50% { transform: translateX(65vw) translateY(18px) rotate(-3deg) scale(0.85); }
+  94% { opacity: 0.38; }
+  100% { transform: translateX(130vw) translateY(-10px) rotate(2deg) scale(0.72); opacity: 0; }
+}
+
+/* Wand-flick sparkle burst, triggered briefly around the theme toggle
+   button whenever it's clicked. Six sparks fly outward at 60° increments
+   and fade; the wand glyph itself flicks through a small arc at the same
+   time. All finite (forwards-filling, no infinite loop) so it plays once
+   per click and cleans itself up. */
+.wand-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.wand-flick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #c9a227;
+  animation: wand-flick 0.5s ease-out;
+}
+
+@keyframes wand-flick {
+  0% { transform: translate(-50%, -50%) rotate(-40deg) scale(0.6); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(30deg) scale(1); opacity: 0; }
+}
+
+.wand-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #f1d999, #c9a227 70%, transparent);
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0);
+  animation: wand-spark-fly 0.6s ease-out forwards;
+}
+
+.dark .wand-spark {
+  background: radial-gradient(circle, #eaf1ff, #8fa8c9 70%, transparent);
+}
+
+@keyframes wand-spark-fly {
+  0% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(var(--angle)) translateX(22px) scale(0); opacity: 0; }
+}
+
+/* "Enchanted photograph" sheen — a soft diagonal highlight idles across
+   every article image every few seconds, like the moving photos in the
+   Daily Prophet, without ever fully obscuring the picture underneath. */
+.enchanted-photo {
+  position: relative;
+}
+
+.enchanted-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+  transform: translateX(-120%);
+  animation: photo-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.dark .enchanted-photo::after {
+  background: linear-gradient(115deg, transparent 40%, rgba(201, 162, 39, 0.25) 50%, transparent 60%);
+}
+
+@keyframes photo-sweep {
+  0%, 70% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+
+/* Respect reduced-motion preferences — the brooms and photo sheen are pure
+   decoration, so they're the first things to switch off; the wand burst is
+   short-lived (0.6s, one-shot) and left as-is. */
+@media (prefers-reduced-motion: reduce) {
+  .broom-layer {
+    display: none;
+  }
+  .enchanted-photo::after {
+    animation: none;
+    display: none;
+  }
+}
