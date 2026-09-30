@@ -4,7 +4,8 @@ import {
   EU_KEYWORDS,
   MAX_ITEMS_PER_FEED,
   TOPIC_KEYWORDS,
-  TOPIC_PRIORITY
+  TOPIC_PRIORITY,
+  SOFT_CONTENT_KEYWORDS
 } from "../../../lib/feeds";
 import { toByteSummary, stripHtml } from "../../../lib/summarize";
 
@@ -53,6 +54,54 @@ function classifyTopic(title, summary) {
     if (TOPIC_KEYWORDS[topic].some((kw) => text.includes(kw))) return topic;
   }
   return null;
+}
+
+function isSoftContent(item) {
+  const text = `${item.title} ${item.summary}`.toLowerCase();
+  return SOFT_CONTENT_KEYWORDS.some((kw) => text.includes(kw));
+}
+
+const CROSS_REGION_STOPWORDS = new Set([
+  "the", "a", "an", "to", "of", "in", "on", "for", "and", "is", "are", "with",
+  "as", "at", "by", "from", "after", "over", "amid", "its", "his", "her",
+  "this", "that", "new", "says", "how", "why", "what", "into", "your", "who",
+  "will", "has", "have", "been", "was", "were", "than", "more", "not"
+]);
+
+function significantWords(title) {
+  return (title || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !CROSS_REGION_STOPWORDS.has(w));
+}
+
+// Finds stories that are independently covered across at least two of the
+// three regional buckets (India / EU / Global) — i.e. the same real-world
+// event surfacing in multiple regions' sources at once. That's a simple,
+// explainable proxy for "this is genuinely big news," as opposed to one
+// outlet's filler, and is used to help populate Top Stories.
+function findCrossRegionStories(regionBuckets) {
+  const tagged = [];
+  Object.entries(regionBuckets).forEach(([region, items]) => {
+    items.forEach((item) => tagged.push({ item, region, words: significantWords(item.title) }));
+  });
+
+  const seen = new Set();
+  const crossRegion = [];
+  tagged.forEach(({ item, region, words }) => {
+    if (words.length === 0 || seen.has(item.id)) return;
+    const matchingRegions = new Set([region]);
+    tagged.forEach((other) => {
+      if (other.item.id === item.id) return;
+      if (words.some((w) => other.words.includes(w))) matchingRegions.add(other.region);
+    });
+    if (matchingRegions.size >= 2) {
+      seen.add(item.id);
+      crossRegion.push(item);
+    }
+  });
+  return crossRegion;
 }
 
 function dedupe(items) {
@@ -124,8 +173,6 @@ export async function GET() {
 
   const cleanItems = allItems.filter((item) => item.title && item.summary);
 
-  const top = dedupe(cleanItems.filter((i) => i.region === "top"));
-
   const india = dedupe(cleanItems.filter((i) => i.region === "india"));
 
   const eu = dedupe(
@@ -135,6 +182,27 @@ export async function GET() {
   );
 
   const global = dedupe(cleanItems.filter((i) => i.region !== "top"));
+
+  // Top Stories = the dedicated "top" feeds (already curated by NYT/TOI as
+  // genuinely important) plus any story independently corroborated across
+  // at least two other regions — both filtered through the soft-content
+  // safety net so lifestyle/viral filler never lands in this tab.
+  //
+  // Corroboration is checked against each item's own ORIGINAL feed region
+  // (india/eu/global as tagged in lib/feeds.js) rather than the display
+  // buckets above — the "global" display bucket deliberately re-includes
+  // India/EU items too, which would otherwise let a purely domestic story
+  // falsely look "cross-region" just because of that overlap.
+  const regionGroups = { india: [], eu: [], global: [] };
+  cleanItems.forEach((item) => {
+    if (regionGroups[item.region]) regionGroups[item.region].push(item);
+  });
+
+  const dedicatedTop = dedupe(cleanItems.filter((i) => i.region === "top")).filter(
+    (i) => !isSoftContent(i)
+  );
+  const crossRegionTop = findCrossRegionStories(regionGroups).filter((i) => !isSoftContent(i));
+  const top = dedupe([...dedicatedTop, ...crossRegionTop]);
 
   const sortByDate = (arr) =>
     [...arr].sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));

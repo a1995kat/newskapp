@@ -30,7 +30,7 @@ const GEO_BY_REGION = {
 async function fetchTrends(geo) {
   try {
     const feed = await parser.parseURL(`https://trends.google.com/trending/rss?geo=${geo}`);
-    return (feed.items || []).slice(0, 8).map((item) => ({
+    return (feed.items || []).slice(0, 10).map((item) => ({
       term: item.title,
       traffic: item.approxTraffic || null
     }));
