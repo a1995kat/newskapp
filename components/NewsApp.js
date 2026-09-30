@@ -13,7 +13,8 @@ import {
   ChevronDown,
   Search,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Languages
 } from "lucide-react";
 import NewsCard from "./NewsCard";
 import { REGIONS, TOPICS, TIME_RANGES } from "../lib/feeds";
@@ -22,6 +23,22 @@ const TABS = [...REGIONS, { key: "saved", label: "Saved" }];
 const SAVE_KEY = "byte-news:saved";
 const THEME_KEY = "byte-news:theme";
 const RECENT_SEARCH_KEY = "byte-news:recent-searches";
+
+const LANGUAGES = [
+  { key: "en", label: "English" },
+  { key: "de", label: "Deutsch" },
+  { key: "hi", label: "हिन्दी" }
+];
+
+// Applies a cached translation to a display copy of the item — the
+// underlying data (region/topic/link/etc.) is untouched, only title/summary
+// swap for the translated versions once they've come back from /api/translate.
+function applyTranslation(item, translations, language) {
+  if (language === "en") return item;
+  const t = translations[item.id];
+  if (!t || t.lang !== language) return item;
+  return { ...item, title: t.title || item.title, summary: t.summary || item.summary };
+}
 
 // Common low-signal words to skip when deriving "trending" keywords from
 // today's actual headlines (see trendingKeywords below).
@@ -65,6 +82,10 @@ export default function NewsApp() {
   const [recentSearches, setRecentSearches] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
+  const [trends, setTrends] = useState({});
+  const [language, setLanguage] = useState("en");
+  const [translations, setTranslations] = useState({});
+  const [translating, setTranslating] = useState(false);
   const searchInputRef = useRef(null);
 
   // Load saved bookmarks + theme preference from localStorage on mount.
@@ -95,6 +116,15 @@ export default function NewsApp() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Trending searches move slowly enough that one fetch per session is fine —
+  // no need to re-poll every 10 minutes like the news feeds.
+  useEffect(() => {
+    fetch("/api/trends")
+      .then((res) => res.json())
+      .then(setTrends)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -206,11 +236,50 @@ export default function NewsApp() {
     );
   }, [tab, topic, timeRange, data, saved, query]);
 
+  // Translate whatever's currently visible (capped, and debounced so rapid
+  // filter/search changes don't fire a burst of requests) whenever the
+  // language changes or new untranslated items scroll into the active list.
+  // Already-translated items are cached by id+language and never re-fetched.
+  useEffect(() => {
+    if (language === "en") return;
+    const timer = setTimeout(() => {
+      const toTranslate = activeList
+        .slice(0, 12)
+        .filter((item) => translations[item.id]?.lang !== language);
+      if (toTranslate.length === 0) return;
+      setTranslating(true);
+      fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target: language,
+          items: toTranslate.map((i) => ({ id: i.id, title: i.title, summary: i.summary }))
+        })
+      })
+        .then((res) => res.json())
+        .then((results) => {
+          if (!Array.isArray(results)) return;
+          setTranslations((prev) => {
+            const next = { ...prev };
+            results.forEach((r) => {
+              next[r.id] = { lang: language, title: r.title, summary: r.summary };
+            });
+            return next;
+          });
+        })
+        .catch(() => {})
+        .finally(() => setTranslating(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [language, activeList, translations]);
+
   const liveLabel =
     data.feedsTotal != null ? `${data.feedsOk}/${data.feedsTotal} sources live` : null;
 
   const activeTopicLabel = TOPICS.find((t) => t.key === topic)?.label || "All";
   const activeTimeLabel = TIME_RANGES.find((t) => t.key === timeRange)?.label || "All time";
+  const activeLanguageLabel = LANGUAGES.find((l) => l.key === language)?.label || "English";
+  const activeTrends = trends[tab] || trends.top || [];
 
   function toggleDropdown(name) {
     setOpenDropdown((prev) => (prev === name ? null : name));
@@ -392,7 +461,7 @@ export default function NewsApp() {
         </nav>
 
         {/* Grouped filter dropdowns — Category and Time — used on both mobile and desktop. */}
-        <div className="max-w-6xl mx-auto px-4 pb-3 flex gap-2">
+        <div className="max-w-6xl mx-auto px-4 pb-3 flex flex-wrap gap-2">
           <div className="relative">
             <button
               onClick={() => toggleDropdown("category")}
@@ -462,10 +531,73 @@ export default function NewsApp() {
               </>
             )}
           </div>
+
+          <div className="relative">
+            <button
+              onClick={() => toggleDropdown("language")}
+              disabled={translating}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors disabled:opacity-60 ${
+                language !== "en"
+                  ? "border-brand text-brand"
+                  : "border-paper-strong dark:border-neutral-700 text-gray-600 dark:text-gray-300"
+              }`}
+            >
+              <Languages size={13} strokeWidth={2} />
+              {activeLanguageLabel}
+              <ChevronDown size={12} strokeWidth={2.5} />
+            </button>
+            {openDropdown === "language" && (
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setOpenDropdown(null)} />
+                <div className="absolute right-0 top-full mt-1 z-30 w-36 rounded-lg border border-paper-border dark:border-neutral-700 bg-paper-card dark:bg-neutral-900 shadow-lg py-1">
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.key}
+                      onClick={() => {
+                        setLanguage(l.key);
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full text-left text-sm px-3 py-2 hover:bg-paper dark:hover:bg-neutral-800 ${
+                        language === l.key ? "font-semibold text-brand" : "text-gray-700 dark:text-gray-300"
+                      }`}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-6 items-start">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5">
+        {activeTrends.length > 0 && (
+          <div className="mb-4 -mx-1 px-1 overflow-x-auto">
+            <div className="flex items-center gap-2 text-xs w-max">
+              <span className="flex items-center gap-1 font-semibold text-gray-500 dark:text-gray-400 shrink-0">
+                <TrendingUp size={13} strokeWidth={2} />
+                Trending on Google Search:
+              </span>
+              {activeTrends.map((t) => (
+                <button
+                  key={t.term}
+                  onClick={() => commitSearch(t.term)}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-paper-card dark:bg-neutral-800 border border-paper-border dark:border-neutral-700 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white hover:border-brand transition-colors whitespace-nowrap"
+                  title={t.traffic ? `${t.traffic} searches` : undefined}
+                >
+                  {t.term}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {translating && (
+          <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">Translating…</p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-5 gap-y-6 items-start">
         {status === "loading" && (
           <p className="col-span-full text-center text-sm text-gray-500 py-10">
             Fetching the latest bytes…
@@ -494,11 +626,12 @@ export default function NewsApp() {
         {activeList.map((item) => (
           <NewsCard
             key={item.id}
-            item={item}
+            item={applyTranslation(item, translations, language)}
             saved={savedIds.has(item.id)}
             onToggleSave={toggleSave}
           />
         ))}
+        </div>
       </main>
 
       <footer className="hidden sm:block max-w-6xl w-full mx-auto px-4 py-6 text-xs text-gray-400 dark:text-gray-600">
