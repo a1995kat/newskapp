@@ -5,7 +5,8 @@ import {
   MAX_ITEMS_PER_FEED,
   TOPIC_KEYWORDS,
   TOPIC_PRIORITY,
-  SOFT_CONTENT_KEYWORDS
+  SOFT_CONTENT_KEYWORDS,
+  HARD_NEWS_OVERRIDE_KEYWORDS
 } from "../../../lib/feeds";
 import { toByteSummary, stripHtml } from "../../../lib/summarize";
 
@@ -56,9 +57,16 @@ function classifyTopic(title, summary) {
   return null;
 }
 
+// App-wide clickbait/entertainment/lifestyle gate. A hard-news override
+// (e.g. "election", "war", "economy") always wins over a soft-content match,
+// so a story that's genuinely about a serious matter isn't excluded just
+// because it also mentions something like a celebrity or an awards show.
 function isSoftContent(item) {
   const text = `${item.title} ${item.summary}`.toLowerCase();
-  return SOFT_CONTENT_KEYWORDS.some((kw) => text.includes(kw));
+  const isSoft = SOFT_CONTENT_KEYWORDS.some((kw) => text.includes(kw));
+  if (!isSoft) return false;
+  const hasHardNewsOverride = HARD_NEWS_OVERRIDE_KEYWORDS.some((kw) => text.includes(kw));
+  return !hasHardNewsOverride;
 }
 
 const CROSS_REGION_STOPWORDS = new Set([
@@ -171,7 +179,12 @@ export async function GET() {
   const results = await Promise.allSettled(FEEDS.map(fetchFeed));
   const allItems = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 
-  const cleanItems = allItems.filter((item) => item.title && item.summary);
+  // Clickbait/entertainment/lifestyle content is filtered out here, once,
+  // before any region bucketing — so it never appears anywhere in the app,
+  // not just Top Stories.
+  const cleanItems = allItems
+    .filter((item) => item.title && item.summary)
+    .filter((item) => !isSoftContent(item));
 
   const india = dedupe(cleanItems.filter((i) => i.region === "india"));
 
@@ -185,8 +198,8 @@ export async function GET() {
 
   // Top Stories = the dedicated "top" feeds (already curated by NYT/TOI as
   // genuinely important) plus any story independently corroborated across
-  // at least two other regions — both filtered through the soft-content
-  // safety net so lifestyle/viral filler never lands in this tab.
+  // at least two other regions. (cleanItems is already scrubbed of
+  // clickbait/entertainment above, so no extra filtering needed here.)
   //
   // Corroboration is checked against each item's own ORIGINAL feed region
   // (india/eu/global as tagged in lib/feeds.js) rather than the display
@@ -198,10 +211,8 @@ export async function GET() {
     if (regionGroups[item.region]) regionGroups[item.region].push(item);
   });
 
-  const dedicatedTop = dedupe(cleanItems.filter((i) => i.region === "top")).filter(
-    (i) => !isSoftContent(i)
-  );
-  const crossRegionTop = findCrossRegionStories(regionGroups).filter((i) => !isSoftContent(i));
+  const dedicatedTop = dedupe(cleanItems.filter((i) => i.region === "top"));
+  const crossRegionTop = findCrossRegionStories(regionGroups);
   const top = dedupe([...dedicatedTop, ...crossRegionTop]);
 
   const sortByDate = (arr) =>
