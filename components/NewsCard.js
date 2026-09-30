@@ -39,17 +39,6 @@ function placeholderGradient(source) {
   return `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 40) % 360} 70% 40%))`;
 }
 
-// Picks one of three torn-parchment edge shapes (see .parchment-card-* in
-// globals.css) deterministically from the story's own id, so a grid of
-// cards reads as a scatter of individually torn clippings rather than
-// identical stamped rectangles, without reshuffling on every re-render.
-const PARCHMENT_VARIANTS = ["parchment-card-a", "parchment-card-b", "parchment-card-c"];
-function parchmentVariant(id) {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  return PARCHMENT_VARIANTS[Math.abs(hash) % PARCHMENT_VARIANTS.length];
-}
-
 export default function NewsCard({ item, saved, onToggleSave }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [shareState, setShareState] = useState("idle"); // idle | copied
@@ -72,12 +61,9 @@ export default function NewsCard({ item, saved, onToggleSave }) {
   }
 
   const showImage = item.image && !imgFailed;
-  const variant = parchmentVariant(item.id);
 
   return (
-    <article
-      className={`animate-ink-in break-inside-avoid mb-6 ${variant} bg-prophet-card dark:bg-prophet-night-card overflow-hidden flex flex-col transition-shadow hover:shadow-[0_6px_20px_rgba(92,26,27,0.18)] dark:hover:shadow-[0_6px_20px_rgba(201,162,39,0.15)]`}
-    >
+    <article className="animate-ink-in break-inside-avoid mb-6 rounded-lg border border-prophet-border dark:border-prophet-night-border bg-prophet-card dark:bg-prophet-night-card overflow-hidden flex flex-col transition-shadow hover:shadow-[0_6px_20px_rgba(92,26,27,0.18)] dark:hover:shadow-[0_6px_20px_rgba(201,162,39,0.15)]">
       <a href={item.link} target="_blank" rel="noopener noreferrer" className="group">
         <div className="w-full aspect-[16/9] relative overflow-hidden enchanted-photo">
           {showImage ? (

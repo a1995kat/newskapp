@@ -104,63 +104,107 @@ function Flourish({ className }) {
   );
 }
 
-// Theme toggle icon — an engraved coin badge rather than a plain sun/moon
-// glyph: gold with a sun-and-crescent motif for the daylight edition, dark
-// silver with a crescent-and-stars motif for the midnight edition.
+// Theme toggle medallion — an engraved coin badge rather than a plain
+// sun/moon glyph: gold with a sun-and-crescent motif for the daylight
+// edition, dark silver with a crescent-and-stars motif for the midnight
+// edition, each with a small perched-raven silhouette along the bottom rim.
 function ThemeCoinIcon({ dark }) {
   if (dark) {
     return (
-      <svg width="17" height="17" viewBox="0 0 40 40" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
         <circle cx="20" cy="20" r="18" fill="#2b3542" stroke="#8fa8c9" strokeWidth="1.4" />
-        <path d="M24 11.5a9.5 9.5 0 100 17 7.6 7.6 0 010-17z" fill="#dce6f5" />
+        <path d="M24 10.5a10.5 10.5 0 100 19 8.4 8.4 0 010-19z" fill="#dce6f5" />
         <g fill="#dce6f5">
           <circle cx="13" cy="13" r="1.1" />
           <circle cx="10" cy="20" r="1.4" />
           <circle cx="14" cy="27" r="1" />
         </g>
+        <path
+          d="M16 30 C16 28.3 17 27.4 18.3 27.3 C18.6 26.5 19.5 26 20.3 26.4 C21.3 25.7 22.6 26.3 22.7 27.4 C23.7 27.7 24 28.9 23.2 29.7 C23.5 30.7 22.6 31.5 21.6 31.1 L16.6 31.1 Z"
+          fill="#101418"
+        />
       </svg>
     );
   }
   return (
-    <svg width="17" height="17" viewBox="0 0 40 40" aria-hidden="true">
+    <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
       <circle cx="20" cy="20" r="18" fill="#c9a227" stroke="#8a6d3b" strokeWidth="1.4" />
-      <path d="M23 11.5a9.5 9.5 0 100 17 7.6 7.6 0 010-17z" fill="#2c221e" />
+      <path d="M23 10.5a10.5 10.5 0 100 19 8.4 8.4 0 010-19z" fill="#2c221e" />
       <g stroke="#2c221e" strokeWidth="1.2" strokeLinecap="round">
-        <circle cx="28" cy="14" r="1.8" fill="#2c221e" stroke="none" />
-        <line x1="28" y1="9.5" x2="28" y2="8" />
-        <line x1="28" y1="20" x2="28" y2="18.5" />
-        <line x1="22.5" y1="14" x2="21" y2="14" />
-        <line x1="34" y1="14" x2="32.5" y2="14" />
-        <line x1="24.1" y1="10.1" x2="23.1" y2="9.1" />
-        <line x1="31.9" y1="17.9" x2="32.9" y2="18.9" />
-        <line x1="24.1" y1="17.9" x2="23.1" y2="18.9" />
-        <line x1="31.9" y1="10.1" x2="32.9" y2="9.1" />
+        <circle cx="28" cy="13" r="1.8" fill="#2c221e" stroke="none" />
+        <line x1="28" y1="8" x2="28" y2="6.3" />
+        <line x1="28" y1="19.5" x2="28" y2="17.8" />
+        <line x1="22.2" y1="13" x2="20.5" y2="13" />
+        <line x1="34.5" y1="13" x2="32.8" y2="13" />
+        <line x1="23.9" y1="8.7" x2="22.7" y2="7.5" />
+        <line x1="32.1" y1="17.3" x2="33.3" y2="18.5" />
+        <line x1="23.9" y1="17.3" x2="22.7" y2="18.5" />
+        <line x1="32.1" y1="8.7" x2="33.3" y2="7.5" />
+      </g>
+      <path
+        d="M16 30 C16 28.3 17 27.4 18.3 27.3 C18.6 26.5 19.5 26 20.3 26.4 C21.3 25.7 22.6 26.3 22.7 27.4 C23.7 27.7 24 28.9 23.2 29.7 C23.5 30.7 22.6 31.5 21.6 31.1 L16.6 31.1 Z"
+        fill="#3f1112"
+      />
+    </svg>
+  );
+}
+
+// The wand glyph shown mid-flick during the sparkle burst — an orb-topped
+// staff wreathed in a swirling glow, in our own oxblood/brass palette.
+function WandFlickIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 40 40" aria-hidden="true">
+      <defs>
+        <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f1d999" />
+          <stop offset="55%" stopColor="#c9a227" />
+          <stop offset="100%" stopColor="#c9a227" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx="27" cy="11" r="10" fill="url(#orbGlow)" opacity="0.85" />
+      <path
+        d="M20 18 C16 15 17 10 22 8 C27 6 30 9 27 13 C24.5 16.5 22 15 20 18 Z"
+        fill="none"
+        stroke="#f1d999"
+        strokeWidth="1.1"
+        opacity="0.8"
+      />
+      <path d="M25 15 L12 32" stroke="#6b4a2b" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="12" cy="32" r="2.2" fill="#3f2a18" />
+      <circle cx="27" cy="11" r="3.2" fill="#f1d999" />
+      <g fill="#f1d999">
+        <circle cx="34" cy="6" r="1" />
+        <circle cx="33" cy="17" r="0.8" />
+        <circle cx="19" cy="24" r="0.9" />
       </g>
     </svg>
   );
 }
 
-// The wand glyph shown mid-flick during the sparkle burst — a diagonal wand
-// with a spiralling sparkle trail, echoing a classic "wand casting a spell"
-// illustration rather than a plain toolbar icon.
-function WandFlickIcon() {
+// A brass astrolabe medallion — concentric rings around a small central
+// sphere, a generic (non-franchise) instrument motif used as the masthead's
+// emblem, in the same gold/brass tones as the rest of the theme.
+function AstrolabeIcon({ className }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
-      <path d="M14 30 L28 10" stroke="#6b4a2b" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="14" cy="30" r="2.2" fill="#3f2a18" />
-      <path
-        d="M18 26 C22 22, 16 18, 22 14 C26 11, 22 9, 26 6"
-        fill="none"
-        stroke="#f1d999"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        opacity="0.9"
-      />
-      <g fill="#f1d999">
-        <circle cx="27" cy="7" r="1.4" />
-        <circle cx="21" cy="15" r="1" />
-        <circle cx="24" cy="11" r="0.8" />
-        <circle cx="17" cy="24" r="0.9" />
+    <svg width="40" height="40" viewBox="0 0 40 40" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="astroRing" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#f1d999" />
+          <stop offset="100%" stopColor="#8a6d3b" />
+        </linearGradient>
+      </defs>
+      <circle cx="20" cy="20" r="17.5" fill="none" stroke="url(#astroRing)" strokeWidth="2" />
+      <circle cx="20" cy="20" r="12" fill="none" stroke="url(#astroRing)" strokeWidth="1.3" opacity="0.85" />
+      <ellipse cx="20" cy="20" rx="17.5" ry="6.5" fill="none" stroke="url(#astroRing)" strokeWidth="1" opacity="0.7" />
+      <line x1="20" y1="2.5" x2="20" y2="37.5" stroke="url(#astroRing)" strokeWidth="1" opacity="0.6" />
+      <line x1="2.5" y1="20" x2="37.5" y2="20" stroke="url(#astroRing)" strokeWidth="1" opacity="0.6" />
+      <circle cx="20" cy="20" r="3.2" fill="url(#astroRing)" />
+      <g fill="#c9a227">
+        <circle cx="20" cy="2.5" r="1.1" />
+        <circle cx="34.9" cy="12" r="0.9" />
+        <circle cx="34.9" cy="28" r="0.9" />
+        <circle cx="5.1" cy="12" r="0.9" />
+        <circle cx="5.1" cy="28" r="0.9" />
       </g>
     </svg>
   );
@@ -245,40 +289,6 @@ function WaxSealIcon({ className }) {
 
 // An original emblem for "The Daily Byte" — a shield with a quill and a
 // small spark, our own masthead crest rather than any school's insignia.
-function CrestIcon({ className }) {
-  return (
-    <svg width="28" height="32" viewBox="0 0 46 52" className={className} aria-hidden="true">
-      <path
-        d="M23 2 L43 9 V25 C43 38 34 47 23 50 C12 47 3 38 3 25 V9 Z"
-        fill="currentColor"
-        opacity="0.1"
-      />
-      <path
-        d="M23 2 L43 9 V25 C43 38 34 47 23 50 C12 47 3 38 3 25 V9 Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-      />
-      <path d="M23 12 L23 34" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path
-        d="M23 12 C18 14 15 19 16 25"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <path
-        d="M13 30 L23 34 L33 30"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <circle cx="23" cy="40" r="1.6" fill="currentColor" />
-    </svg>
-  );
-}
-
 // A generic snowy-owl illustration — an owl in silhouette, not a portrait of
 // any particular named character — used as a small companion motif in the
 // header caption and the Saved tab's empty state.
@@ -522,26 +532,48 @@ export default function NewsApp() {
           >
             <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
           </button>
+          {/* LIGHT / DARK toggle switch — a two-tone brass/steel strap with a
+              coin medallion straddling the center, rather than a plain
+              icon button. */}
           <button
             onClick={handleThemeToggle}
-            className="relative p-2 rounded-full border border-prophet-border dark:border-prophet-night-border text-prophet-muted dark:text-prophet-night-muted hover:text-prophet-oxblood dark:hover:text-prophet-gold-bright transition-colors"
+            className="relative flex items-center h-8 w-[122px] rounded-full border border-prophet-border dark:border-prophet-night-border overflow-hidden"
             aria-label="Toggle dark mode"
             title="Wave the wand"
           >
-            {/* Distinct icon per theme rather than a plain sun/moon swap —
-                an engraved coin badge, gold sun-and-crescent for daylight,
-                silver moon-and-stars for the midnight edition. */}
-            <ThemeCoinIcon dark={dark} />
-            {wandBurst && (
-              <span className="wand-burst" aria-hidden="true">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <span key={i} className="wand-spark" style={{ "--angle": `${i * 60}deg` }} />
-                ))}
-                <span className="wand-flick">
-                  <WandFlickIcon />
+            <span
+              className={`flex-1 h-full flex items-center justify-start pl-3 text-[9px] font-press font-bold tracking-widest transition-opacity ${
+                dark ? "opacity-40" : "opacity-100"
+              }`}
+              style={{ background: "linear-gradient(135deg, #f1d999, #b08d57)", color: "#3f2f18" }}
+            >
+              LIGHT
+            </span>
+            <span
+              className={`flex-1 h-full flex items-center justify-end pr-3 text-[9px] font-press font-bold tracking-widest transition-opacity ${
+                dark ? "opacity-100" : "opacity-40"
+              }`}
+              style={{ background: "linear-gradient(135deg, #6b7280, #2b3542)", color: "#e7edf3" }}
+            >
+              DARK
+            </span>
+
+            <span
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full border-2 border-prophet-parchment dark:border-prophet-night shadow-md flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #f1d999, #8a6d3b)" }}
+            >
+              <ThemeCoinIcon dark={dark} />
+              {wandBurst && (
+                <span className="wand-burst" aria-hidden="true">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <span key={i} className="wand-spark" style={{ "--angle": `${i * 60}deg` }} />
+                  ))}
+                  <span className="wand-flick">
+                    <WandFlickIcon />
+                  </span>
                 </span>
-              </span>
-            )}
+              )}
+            </span>
           </button>
         </div>
 
@@ -587,7 +619,7 @@ export default function NewsApp() {
           </p>
 
           <div className="flex justify-center my-1.5">
-            <CrestIcon className="text-prophet-oxblood/70 dark:text-prophet-gold-bright/70 w-5 h-6" />
+            <AstrolabeIcon className="w-8 h-8 opacity-90 drop-shadow-sm" />
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-1 text-[11px] font-press uppercase tracking-[0.12em] text-prophet-muted dark:text-prophet-night-muted">

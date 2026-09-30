@@ -72,7 +72,7 @@ export default function HeroCard({ item, saved, onToggleSave, sectionLabel }) {
           rel="noopener noreferrer"
           className="md:col-span-2 block group"
         >
-          <div className="w-full aspect-[4/3] md:aspect-[3/2] overflow-hidden enchanted-photo parchment-card-b">
+          <div className="w-full aspect-[4/3] md:aspect-[3/2] overflow-hidden rounded-sm border border-prophet-border dark:border-prophet-night-border enchanted-photo">
             {showImage ? (
               <img
                 src={item.image}
