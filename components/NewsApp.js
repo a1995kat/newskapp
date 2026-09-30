@@ -532,6 +532,14 @@ export default function NewsApp() {
           >
             <RefreshCw size={16} strokeWidth={2} className={refreshing ? "animate-spin" : ""} />
           </button>
+          {/* The wand itself, always visible (not just during the click
+              burst) — a small persistent glyph sitting right beside the
+              toggle it controls. */}
+          <span className="relative shrink-0" aria-hidden="true">
+            <span className="absolute inset-0 -z-10 rounded-full bg-prophet-gold/30 dark:bg-prophet-gold-bright/25 blur-md animate-glow" />
+            <WandFlickIcon />
+          </span>
+
           {/* LIGHT / DARK toggle switch — a two-tone brass/steel strap with a
               coin medallion straddling the center, rather than a plain
               icon button. */}
