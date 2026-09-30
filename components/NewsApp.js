@@ -82,7 +82,6 @@ export default function NewsApp() {
   const [recentSearches, setRecentSearches] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMac, setIsMac] = useState(false);
-  const [trends, setTrends] = useState({});
   const [language, setLanguage] = useState("en");
   const [translations, setTranslations] = useState({});
   const [translating, setTranslating] = useState(false);
@@ -116,15 +115,6 @@ export default function NewsApp() {
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  // Trending searches move slowly enough that one fetch per session is fine —
-  // no need to re-poll every 10 minutes like the news feeds.
-  useEffect(() => {
-    fetch("/api/trends")
-      .then((res) => res.json())
-      .then(setTrends)
-      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -279,7 +269,6 @@ export default function NewsApp() {
   const activeTopicLabel = TOPICS.find((t) => t.key === topic)?.label || "All";
   const activeTimeLabel = TIME_RANGES.find((t) => t.key === timeRange)?.label || "All time";
   const activeLanguageLabel = LANGUAGES.find((l) => l.key === language)?.label || "English";
-  const activeTrends = trends[tab] || trends.top || [];
 
   function toggleDropdown(name) {
     setOpenDropdown((prev) => (prev === name ? null : name));
@@ -572,27 +561,6 @@ export default function NewsApp() {
       </header>
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-5 pb-24 sm:pb-5">
-        {activeTrends.length > 0 && (
-          <div className="mb-4 -mx-1 px-1 overflow-x-auto">
-            <div className="flex items-center gap-2 text-xs w-max">
-              <span className="flex items-center gap-1 font-semibold text-gray-500 dark:text-gray-400 shrink-0">
-                <TrendingUp size={13} strokeWidth={2} />
-                Trending on Google Search:
-              </span>
-              {activeTrends.map((t) => (
-                <button
-                  key={t.term}
-                  onClick={() => commitSearch(t.term)}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-paper-card dark:bg-neutral-800 border border-paper-border dark:border-neutral-700 text-gray-600 dark:text-gray-300 hover:bg-brand hover:text-white hover:border-brand transition-colors whitespace-nowrap"
-                  title={t.traffic ? `${t.traffic} searches` : undefined}
-                >
-                  {t.term}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {translating && (
           <p className="mb-3 text-xs text-gray-400 dark:text-gray-500">Translating…</p>
         )}
