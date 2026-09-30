@@ -196,6 +196,116 @@ function BroomTrail() {
   );
 }
 
+// A handful of tiny gold motes drift slowly upward and fade in and out —
+// ambient "dust caught in torchlight," independent of the click-triggered
+// wand burst. Positions/timings are fixed per-render (not random) so they
+// don't jump around when the parent re-renders for unrelated reasons.
+const DUST_MOTES = Array.from({ length: 14 }).map((_, i) => ({
+  left: `${(i * 37) % 100}%`,
+  bottom: `${(i * 17) % 60}%`,
+  duration: `${9 + (i % 5) * 2}s`,
+  delay: `${(i * 1.3) % 12}s`
+}));
+
+function SparkleDust() {
+  return (
+    <div className="dust-layer" aria-hidden="true">
+      {DUST_MOTES.map((m, i) => (
+        <span
+          key={i}
+          className="dust-mote"
+          style={{
+            left: m.left,
+            bottom: m.bottom,
+            animationDuration: m.duration,
+            animationDelay: m.delay
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// A wax letter-seal — a generic owl-post flourish (wax seals predate any
+// particular franchise), used next to the dateline as a small ornamental
+// badge rather than a plain bullet.
+function WaxSealIcon({ className }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 32 32" className={className} aria-hidden="true">
+      <circle cx="16" cy="16" r="14" fill="#5c1a1b" />
+      <circle cx="16" cy="16" r="14" fill="none" stroke="#3f1112" strokeWidth="1" opacity="0.6" />
+      <path
+        d="M16 8 L18.5 13.2 L24.2 14 L20.1 17.9 L21.1 23.6 L16 20.9 L10.9 23.6 L11.9 17.9 L7.8 14 L13.5 13.2 Z"
+        fill="#c9a227"
+        opacity="0.9"
+      />
+    </svg>
+  );
+}
+
+// An original emblem for "The Daily Byte" — a shield with a quill and a
+// small spark, our own masthead crest rather than any school's insignia.
+function CrestIcon({ className }) {
+  return (
+    <svg width="28" height="32" viewBox="0 0 46 52" className={className} aria-hidden="true">
+      <path
+        d="M23 2 L43 9 V25 C43 38 34 47 23 50 C12 47 3 38 3 25 V9 Z"
+        fill="currentColor"
+        opacity="0.1"
+      />
+      <path
+        d="M23 2 L43 9 V25 C43 38 34 47 23 50 C12 47 3 38 3 25 V9 Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path d="M23 12 L23 34" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M23 12 C18 14 15 19 16 25"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13 30 L23 34 L33 30"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <circle cx="23" cy="40" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+// A generic snowy-owl illustration — an owl in silhouette, not a portrait of
+// any particular named character — used as a small companion motif in the
+// header caption and the Saved tab's empty state.
+function OwlIcon({ className }) {
+  return (
+    <svg width="34" height="34" viewBox="0 0 40 40" className={className} aria-hidden="true">
+      <path
+        d="M8 22 C8 12 13 6 20 6 C27 6 32 12 32 22 C32 30 27 35 20 35 C13 35 8 30 8 22 Z"
+        fill="currentColor"
+        opacity="0.9"
+      />
+      <path d="M6 10 L13 16 L11 8 Z" fill="currentColor" opacity="0.9" />
+      <path d="M34 10 L27 16 L29 8 Z" fill="currentColor" opacity="0.9" />
+      <circle cx="15" cy="20" r="4.2" fill="#fff" />
+      <circle cx="25" cy="20" r="4.2" fill="#fff" />
+      <circle cx="15" cy="20" r="2" fill="#2c221e" />
+      <circle cx="25" cy="20" r="2" fill="#2c221e" />
+      <path d="M20 22 L17.5 27 L22.5 27 Z" fill="#c9a227" />
+      <g fill="currentColor" opacity="0.6">
+        <circle cx="14" cy="30" r="1" />
+        <circle cx="20" cy="32" r="1" />
+        <circle cx="26" cy="30" r="1" />
+      </g>
+    </svg>
+  );
+}
+
 export default function NewsApp() {
   const [data, setData] = useState({
     top: [],
@@ -395,6 +505,7 @@ export default function NewsApp() {
   return (
     <div className="min-h-screen flex flex-col">
       <BroomTrail />
+      <SparkleDust />
       <header className="sticky top-0 z-20 bg-prophet-parchment/95 dark:bg-prophet-night/95 backdrop-blur border-b border-prophet-border dark:border-prophet-night-border">
         {/* Slim utility bar above the masthead. */}
         <div className="max-w-6xl mx-auto px-4 pt-2 flex items-center justify-end gap-2">
@@ -470,12 +581,22 @@ export default function NewsApp() {
             <Flourish className="hidden sm:block text-prophet-oxblood dark:text-prophet-gold-bright shrink-0 scale-x-[-1]" />
           </div>
 
-          <p className="font-headline italic text-xs text-prophet-muted dark:text-prophet-night-muted mt-1">
+          <p className="font-headline italic text-xs text-prophet-muted dark:text-prophet-night-muted mt-1 flex items-center justify-center gap-1.5">
+            <OwlIcon className="w-4 h-4 shrink-0" />
             News delivered from your own beloved white owl
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-2 text-[11px] font-press uppercase tracking-[0.12em] text-prophet-muted dark:text-prophet-night-muted">
-            {todayLabel && <span>{todayLabel}</span>}
+          <div className="flex justify-center my-1.5">
+            <CrestIcon className="text-prophet-oxblood/70 dark:text-prophet-gold-bright/70 w-5 h-6" />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 mt-1 text-[11px] font-press uppercase tracking-[0.12em] text-prophet-muted dark:text-prophet-night-muted">
+            {todayLabel && (
+              <span className="inline-flex items-center gap-1">
+                <WaxSealIcon />
+                {todayLabel}
+              </span>
+            )}
             {todayLabel && <span aria-hidden="true">•</span>}
             <span>Price: 5 Sapphires / Free Today</span>
             {liveLabel && (
@@ -702,16 +823,19 @@ export default function NewsApp() {
         )}
 
         {status === "ready" && activeList.length === 0 && (
-          <p className="flex items-center justify-center gap-1.5 text-center text-sm text-prophet-muted dark:text-prophet-night-muted py-10">
+          <div className="flex flex-col items-center justify-center gap-2 text-center text-sm text-prophet-muted dark:text-prophet-night-muted py-10">
             {tab === "saved" ? (
               <>
-                No saved stories yet — tap <Bookmark size={14} strokeWidth={2} className="inline" /> on
-                any card.
+                <OwlIcon className="w-10 h-10 opacity-70" />
+                <p className="flex items-center gap-1.5">
+                  No saved stories yet — tap <Bookmark size={14} strokeWidth={2} className="inline" /> on
+                  any card.
+                </p>
               </>
             ) : (
-              "No stories match these filters."
+              <p>No stories match these filters.</p>
             )}
-          </p>
+          </div>
         )}
 
         {status === "ready" && activeList.length > 0 && (

@@ -220,11 +220,89 @@ body {
   85%, 100% { transform: translateX(120%); }
 }
 
-/* Respect reduced-motion preferences — the brooms and photo sheen are pure
-   decoration, so they're the first things to switch off; the wand burst is
-   short-lived (0.6s, one-shot) and left as-is. */
+/* Ambient sparkle dust — tiny gold (silver in dark mode) motes drift slowly
+   upward and fade in and out, independent of the click-triggered wand
+   burst above — like dust caught in torchlight. */
+.dust-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 35;
+  overflow: hidden;
+}
+
+.dust-mote {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #f1d999, #c9a227 70%, transparent);
+  opacity: 0;
+  animation-name: dust-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.dark .dust-mote {
+  background: radial-gradient(circle, #eaf1ff, #8fa8c9 70%, transparent);
+}
+
+@keyframes dust-drift {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-110vh) translateX(14px); opacity: 0; }
+}
+
+/* Story cards as torn parchment scraps rather than plain rounded
+   rectangles — an irregular "deckle edge" clip-path on all four sides.
+   Three slightly different variants (cycled by the card's own id) keep a
+   grid of them from all looking identically stamped. */
+.parchment-card-a {
+  clip-path: polygon(
+    1% 4%, 6% 0%, 15% 2%, 25% 0%, 35% 2%, 45% 0%, 55% 2%, 65% 0%, 75% 2%, 85% 0%, 94% 3%, 100% 6%,
+    99% 15%, 100% 25%, 98% 35%, 100% 45%, 99% 55%, 100% 65%, 98% 75%, 100% 85%, 99% 94%, 96% 100%,
+    85% 98%, 75% 100%, 65% 98%, 55% 100%, 45% 98%, 35% 100%, 25% 98%, 15% 100%, 5% 97%, 0% 94%,
+    2% 85%, 0% 75%, 2% 65%, 0% 55%, 2% 45%, 0% 35%, 2% 25%, 0% 15%, 3% 6%
+  );
+}
+
+.parchment-card-b {
+  clip-path: polygon(
+    0% 3%, 8% 1%, 18% 3%, 28% 0%, 38% 3%, 48% 1%, 58% 3%, 68% 0%, 78% 3%, 88% 1%, 97% 4%, 100% 8%,
+    98% 17%, 100% 27%, 97% 37%, 100% 47%, 98% 57%, 100% 67%, 97% 77%, 100% 87%, 96% 96%, 91% 99%,
+    82% 96%, 72% 99%, 62% 96%, 52% 99%, 42% 96%, 32% 99%, 22% 96%, 12% 99%, 3% 95%, 0% 90%,
+    3% 81%, 0% 71%, 3% 61%, 0% 51%, 3% 41%, 0% 31%, 3% 21%, 0% 11%, 1% 5%
+  );
+}
+
+.parchment-card-c {
+  clip-path: polygon(
+    2% 2%, 10% 0%, 20% 2%, 30% 0%, 40% 2%, 50% 0%, 60% 2%, 70% 0%, 80% 2%, 90% 0%, 98% 3%, 100% 7%,
+    97% 16%, 100% 26%, 98% 36%, 100% 46%, 97% 56%, 100% 66%, 98% 76%, 100% 86%, 97% 95%, 92% 98%,
+    83% 95%, 73% 98%, 63% 95%, 53% 98%, 43% 95%, 33% 98%, 23% 95%, 13% 98%, 4% 94%, 1% 89%,
+    4% 80%, 1% 70%, 4% 60%, 1% 50%, 4% 40%, 1% 30%, 4% 20%, 1% 10%, 2% 4%
+  );
+}
+
+.parchment-card-a,
+.parchment-card-b,
+.parchment-card-c {
+  box-shadow: inset 0 0 0 1px rgba(92, 26, 27, 0.18), 0 2px 6px rgba(44, 34, 30, 0.12);
+}
+
+.dark .parchment-card-a,
+.dark .parchment-card-b,
+.dark .parchment-card-c {
+  box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.16), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Respect reduced-motion preferences — the brooms, dust and photo sheen are
+   pure decoration, so they're the first things to switch off; the wand
+   burst is short-lived (0.6s, one-shot) and left as-is. */
 @media (prefers-reduced-motion: reduce) {
-  .broom-layer {
+  .broom-layer,
+  .dust-layer {
     display: none;
   }
   .enchanted-photo::after {
