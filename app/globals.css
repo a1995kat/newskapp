@@ -160,7 +160,10 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  color: #c9a227;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  transform-origin: center;
   animation: wand-flick 0.5s ease-out;
 }
 

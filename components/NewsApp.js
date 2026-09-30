@@ -8,9 +8,6 @@ import {
   Globe2,
   Bookmark,
   RefreshCw,
-  Moon,
-  Sparkles,
-  Wand2,
   ChevronDown,
   Search,
   Clock,
@@ -103,6 +100,68 @@ function Flourish({ className }) {
       <path d="M28 1 L32 7 L28 13 L24 7 Z" fill="currentColor" />
       <line x1="38" y1="7" x2="64" y2="7" stroke="currentColor" strokeWidth="1" />
       <circle cx="58" cy="7" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Theme toggle icon — an engraved coin badge rather than a plain sun/moon
+// glyph: gold with a sun-and-crescent motif for the daylight edition, dark
+// silver with a crescent-and-stars motif for the midnight edition.
+function ThemeCoinIcon({ dark }) {
+  if (dark) {
+    return (
+      <svg width="17" height="17" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="#2b3542" stroke="#8fa8c9" strokeWidth="1.4" />
+        <path d="M24 11.5a9.5 9.5 0 100 17 7.6 7.6 0 010-17z" fill="#dce6f5" />
+        <g fill="#dce6f5">
+          <circle cx="13" cy="13" r="1.1" />
+          <circle cx="10" cy="20" r="1.4" />
+          <circle cx="14" cy="27" r="1" />
+        </g>
+      </svg>
+    );
+  }
+  return (
+    <svg width="17" height="17" viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#c9a227" stroke="#8a6d3b" strokeWidth="1.4" />
+      <path d="M23 11.5a9.5 9.5 0 100 17 7.6 7.6 0 010-17z" fill="#2c221e" />
+      <g stroke="#2c221e" strokeWidth="1.2" strokeLinecap="round">
+        <circle cx="28" cy="14" r="1.8" fill="#2c221e" stroke="none" />
+        <line x1="28" y1="9.5" x2="28" y2="8" />
+        <line x1="28" y1="20" x2="28" y2="18.5" />
+        <line x1="22.5" y1="14" x2="21" y2="14" />
+        <line x1="34" y1="14" x2="32.5" y2="14" />
+        <line x1="24.1" y1="10.1" x2="23.1" y2="9.1" />
+        <line x1="31.9" y1="17.9" x2="32.9" y2="18.9" />
+        <line x1="24.1" y1="17.9" x2="23.1" y2="18.9" />
+        <line x1="31.9" y1="10.1" x2="32.9" y2="9.1" />
+      </g>
+    </svg>
+  );
+}
+
+// The wand glyph shown mid-flick during the sparkle burst — a diagonal wand
+// with a spiralling sparkle trail, echoing a classic "wand casting a spell"
+// illustration rather than a plain toolbar icon.
+function WandFlickIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M14 30 L28 10" stroke="#6b4a2b" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="14" cy="30" r="2.2" fill="#3f2a18" />
+      <path
+        d="M18 26 C22 22, 16 18, 22 14 C26 11, 22 9, 26 6"
+        fill="none"
+        stroke="#f1d999"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        opacity="0.9"
+      />
+      <g fill="#f1d999">
+        <circle cx="27" cy="7" r="1.4" />
+        <circle cx="21" cy="15" r="1" />
+        <circle cx="24" cy="11" r="0.8" />
+        <circle cx="17" cy="24" r="0.9" />
+      </g>
     </svg>
   );
 }
@@ -359,14 +418,17 @@ export default function NewsApp() {
             title="Wave the wand"
           >
             {/* Distinct icon per theme rather than a plain sun/moon swap —
-                daylight edition gets a sparkle, midnight edition gets a moon. */}
-            {dark ? <Moon size={16} strokeWidth={2} /> : <Sparkles size={16} strokeWidth={2} />}
+                an engraved coin badge, gold sun-and-crescent for daylight,
+                silver moon-and-stars for the midnight edition. */}
+            <ThemeCoinIcon dark={dark} />
             {wandBurst && (
               <span className="wand-burst" aria-hidden="true">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <span key={i} className="wand-spark" style={{ "--angle": `${i * 60}deg` }} />
                 ))}
-                <Wand2 size={14} strokeWidth={2} className="wand-flick" />
+                <span className="wand-flick">
+                  <WandFlickIcon />
+                </span>
               </span>
             )}
           </button>
